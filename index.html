@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F5FBF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Progression">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Progression</title>
+<style>
+  :root {
+    --bg: #EDF0F3; --surface: #FFFFFF; --ink: #16222E; --muted: #5B6B7A;
+    --line: #D3DAE1; --accent: #1F5FBF; --ok: #2E7D4F; --warn: #B25E09; --push: #1F5FBF; --pull: #2E7D4F;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #11181F; --surface: #1A242E; --ink: #E8EDF2; --muted: #93A1AF;
+            --line: #2B3844; --accent: #6FA3F0; --ok: #6CC391; --warn: #E8A15A; --push: #6FA3F0; --pull: #6CC391; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.4 -apple-system, system-ui, "Segoe UI", sans-serif;
+         padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  main { max-width: 560px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.4rem; margin: 8px 0 12px; }
+  h2 { font-size: 1.05rem; margin: 0; }
+  button, select, input { font: inherit; color: var(--ink); background: var(--surface);
+         border: 1px solid var(--line); border-radius: 8px; padding: 10px; min-height: 44px; }
+  .weekbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .weekbar button { flex: 0 0 44px; }
+  .weekbar strong { flex: 1; text-align: center; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+  .tabs button { padding: 8px 4px; }
+  .tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tabs button.jj { opacity: .55; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+          padding: 14px; margin-bottom: 12px; }
+  .card h2 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .variant { color: var(--muted); margin: 2px 0 10px; font-size: .9rem; }
+  .row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; color: var(--muted); font-size: .9rem; }
+  .row select { width: 5.5rem; }
+  .sets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sets input { width: 100%; text-align: center; }
+  .sets input:disabled { opacity: .35; }
+  .status { margin: 10px 0 0; font-weight: 600; min-height: 1.4em; }
+  .up { color: var(--ok); } .mid, .low { color: var(--warn); }
+  .mode { width: 100%; margin-bottom: 12px; }
+  .note { color: var(--muted); font-size: .85rem; margin: 6px 0 12px; }
+  .actions { display: grid; gap: 8px; margin-top: 8px; }
+  .actions button { width: 100%; }
+  .primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  details { margin-top: 16px; }
+  summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+  .setting { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; }
+  .setting input[type=number] { width: 5rem; text-align: center; }
+  .setting input[type=text] { width: 12rem; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Progression</h1>
+  <div class="weekbar">
+    <button id="prev" aria-label="Vorherige Woche">‹</button>
+    <strong id="weekLabel"></strong>
+    <button id="next" aria-label="Nächste Woche">›</button>
+  </div>
+  <div class="tabs" id="tabs" role="tablist"></div>
+  <div id="panel"></div>
+
+  <div class="actions">
+    <button id="exportCsv" class="primary">Export als CSV (für das große Sheet)</button>
+    <button id="exportJson">Backup speichern (JSON)</button>
+    <button id="importJson">Backup wiederherstellen</button>
+    <input type="file" id="file" accept="application/json,.json" hidden>
+  </div>
+  <p class="note">Die Daten liegen nur in diesem Browser auf diesem Gerät. Speichere regelmäßig ein Backup.</p>
+
+  <details>
+    <summary>Einstellungen</summary>
+    <div class="setting"><label for="block">Block-Name</label><input type="text" id="block"></div>
+    <div id="starts"></div>
+  </details>
+</main>
+
+<script>
+// ============================================================ Daten
+const LADDERS = {
+  "Planche push up progression": ["Deep Push-ups", "Core-Level Pseudo-Planche Push-ups", "Waist-Level Pseudo-Planche Push-ups", "Tuck Planche Raises", "Slow Tuck Planche Raises", "Slow Advanced Tuck Planche Raises", "Slow Super Advanced Tuck Planche Raises", "Slow Planche Raises"],
+  "Pike push up progression": ["Deep Pike Push-ups", "Knee-Height Decline Pike Push-ups", "Vertical Decline Pike Push-ups", "Deep Chest-to-Wall Handstand Push-ups", "Deep Handstand Push-ups", "90° Handstand Push-ups", "Deep 90° Handstand Push-ups"],
+  "Dips": ["Dips, Körpergewicht", "Dips + 5 kg", "Dips + 10 kg", "Dips + 15 kg", "Dips + 20 kg", "Dips + 25 kg", "Dips + 30 kg (Weste)"],
+  "Pistol squat": ["Box Pistol Squat, hohe Box", "Box Pistol Squat, mittlere Box", "Box Pistol Squat, tiefe Box", "Pistol Squat mit Hand- oder Band-Assistenz", "Pistol Squat, frei", "Pistol Squat + 7,5 kg", "Pistol Squat + 15 kg"],
+  "Core superset (Push-Tag)": ["Ab Wheel, kniend, halbe Strecke", "Ab Wheel, kniend, volle Strecke", "Ab Wheel, aus dem Stand, halbe Strecke", "Ab Wheel, aus dem Stand, volle Strecke"],
+  "Front Lever": ["Tuck Front Lever mit Band", "Tuck Front Lever", "Advanced Tuck Front Lever", "One-Leg Front Lever", "Straddle Front Lever", "Full Front Lever"],
+  "Klimmzug": ["Negative Klimmzüge", "Klimmzüge, Körpergewicht", "Klimmzüge + 5 kg", "Klimmzüge + 10 kg", "Klimmzüge + 15 kg", "Klimmzüge + 20 kg", "Klimmzüge + 25 kg", "Klimmzüge + 30 kg (Weste)"],
+  "Rudern / FL Pull-ups": ["Knee-Height Decline Rows", "Negative Tuck Front Lever Arcs", "Tuck Front Lever Arcs", "Slow Tuck Front Lever Arcs", "Slow Advanced Tuck Front Lever Arcs", "Slow Super Advanced Tuck Front Lever Arcs", "Slow Front Lever Arcs"],
+  "Hüftheben": ["Hüftheben beidbeinig", "Hüftheben einbeinig", "Hüftheben einbeinig, Schultern erhöht", "Hüftheben einbeinig + 7,5 kg", "Hüftheben einbeinig + 15 kg", "Hüftheben einbeinig + 30 kg (Weste)"],
+  "Core superset (Pull-Tag)": ["Hanging Knee Raises", "Hanging Leg Raises, angewinkelt", "Hanging Leg Raises, gestreckt", "Toes to Bar", "Toes to Bar mit 1 s Pause oben"]
+};
+
+// pattern, Sätze, Wdh min, Wdh max, Einheit, Startstufe (Schätzung)
+const PLAN = [
+  ["Push", "Planche push up progression", 4, 5, 8, "Wdh", 3],
+  ["Push", "Pike push up progression", 4, 5, 8, "Wdh", 2],
+  ["Push", "Dips", 4, 5, 8, "Wdh", 2],
+  ["Push", "Pistol squat", 4, 5, 8, "Wdh pro Seite", 4],
+  ["Push", "Core superset (Push-Tag)", 3, 8, 12, "Wdh", 2],
+  ["Pull", "Front Lever", 5, 6, 10, "Sek", 2],
+  ["Pull", "Klimmzug", 4, 5, 8, "Wdh", 2],
+  ["Pull", "Rudern / FL Pull-ups", 4, 5, 8, "Wdh", 2],
+  ["Pull", "Hüftheben", 4, 5, 8, "Wdh pro Seite", 2],
+  ["Pull", "Core superset (Pull-Tag)", 3, 8, 12, "Wdh", 2]
+].map(([pattern, name, sets, min, max, unit, start]) => ({ pattern, name, sets, min, max, unit, start }));
+
+const SESSIONS = [
+  { name: "Push 1", pattern: "Push", defaultMode: "Jiu Jitsu" },
+  { name: "Pull 1", pattern: "Pull", defaultMode: "Training" },
+  { name: "Push 2", pattern: "Push", defaultMode: "Training" },
+  { name: "Pull 2", pattern: "Pull", defaultMode: "Training" }
+];
+
+// ============================================================ Zustand und Speicher
+const KEY = "progression-v2";
+function load() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch (e) { return null; }
+}
+let state = load() || { block: "Block 1", week: 1, session: 0, sets: {}, start: {}, weeks: {} };
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* Speicher voll oder gesperrt */ }
+}
+
+const setsOf = ex => state.sets[ex.name] ?? ex.sets;
+const startOf = ex => state.start[ex.name] ?? ex.start;
+const maxStage = ex => LADDERS[ex.name].length;
+const exercisesOf = pattern => PLAN.filter(e => e.pattern === pattern);
+
+// lesen ohne anzulegen
+function peek(week, si) {
+  const s = SESSIONS[si];
+  return state.weeks[week]?.[s.name] ?? { mode: s.defaultMode, reps: {} };
+}
+// schreiben (legt an)
+function ensure(week, si) {
+  const s = SESSIONS[si];
+  const w = (state.weeks[week] ||= {});
+  return (w[s.name] ||= { mode: s.defaultMode, reps: {} });
+}
+
+// ============================================================ Logik (gleiche Regeln wie die Excel-Tabelle)
+function statusOf(ex, data) {
+  if (data.mode === "Jiu Jitsu") return "Jiu Jitsu ersetzt";
+  const n = setsOf(ex);
+  const reps = (data.reps[ex.name] || []).slice(0, n)
+    .filter(v => v !== "" && v != null).map(Number).filter(v => !Number.isNaN(v));
+  if (!reps.length) return "";
+  if (reps.length < n) return "offen";
+  const low = Math.min(...reps);
+  if (low >= ex.max) return "Stufe hoch";
+  if (low >= ex.min) return "Wdh steigern";
+  return "Stufe prüfen";
+}
+
+// Stufe in Woche w, Einheit si: Startstufe plus ein Schritt für jede frühere Einheit mit Status "Stufe hoch"
+function stageFor(ex, week, si) {
+  const o = (week - 1) * 2 + (si >= 2 ? 1 : 0);   // wievielte Einheit dieses Musters
+  let stage = startOf(ex);
+  for (let j = 0; j < o; j++) {
+    const w = Math.floor(j / 2) + 1;
+    const s = ex.pattern === "Push" ? (j % 2 === 0 ? 0 : 2) : (j % 2 === 0 ? 1 : 3);
+    if (statusOf(ex, peek(w, s)) === "Stufe hoch") stage = Math.min(maxStage(ex), stage + 1);
+  }
+  return Math.min(Math.max(stage, 1), maxStage(ex));
+}
+
+const hasData = (w) => SESSIONS.some((s, si) => Object.values(peek(w, si).reps).some(a => a.some(v => v !== "" && v != null)));
+
+// ============================================================ UI
+const $ = id => document.getElementById(id);
+const CLS = { "Stufe hoch": "up", "Wdh steigern": "mid", "Stufe prüfen": "low" };
+
+function render() {
+  $("weekLabel").textContent = "Woche " + state.week;
+  $("block").value = state.block;
+
+  $("tabs").innerHTML = "";
+  SESSIONS.forEach((s, si) => {
+    const b = document.createElement("button");
+    b.textContent = s.name;
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", String(si === state.session));
+    if (peek(state.week, si).mode === "Jiu Jitsu") b.classList.add("jj");
+    b.onclick = () => { state.session = si; save(); render(); };
+    $("tabs").append(b);
+  });
+
+  const si = state.session, s = SESSIONS[si], data = peek(state.week, si);
+  const panel = $("panel");
+  panel.innerHTML = "";
+
+  if (s.pattern === "Push") {
+    const sel = document.createElement("select");
+    sel.className = "mode";
+    sel.setAttribute("aria-label", s.name + ": Training oder Jiu Jitsu");
+    ["Training", "Jiu Jitsu"].forEach(m => sel.add(new Option(m, m)));
+    sel.value = data.mode;
+    sel.onchange = () => { ensure(state.week, si).mode = sel.value; save(); render(); };
+    panel.append(sel);
+    if (data.mode === "Jiu Jitsu") {
+      const p = document.createElement("p");
+      p.className = "note";
+      p.textContent = "Jiu Jitsu ersetzt diese Einheit. Die Stufen bleiben unverändert. Wähle Training, um Sätze einzutragen.";
+      panel.append(p);
+      return;
+    }
+  }
+
+  exercisesOf(s.pattern).forEach(ex => {
+    const stage = stageFor(ex, state.week, si);
+    const status = statusOf(ex, data);
+    const card = document.createElement("section");
+    card.className = "card";
+
+    const h = document.createElement("h2");
+    const t = document.createElement("span"); t.textContent = ex.name;
+    const u = document.createElement("span"); u.className = "variant"; u.textContent = `${setsOf(ex)} × ${ex.min}–${ex.max} ${ex.unit}`;
+    h.append(t, u);
+
+    const v = document.createElement("p");
+    v.className = "variant";
+    v.textContent = `Stufe ${stage}: ${LADDERS[ex.name][stage - 1]}`;
+
+    const row = document.createElement("div");
+    row.className = "row";
+    const lab = document.createElement("label"); lab.textContent = "Sätze";
+    const sel = document.createElement("select");
+    sel.setAttribute("aria-label", "Anzahl Sätze " + ex.name);
+    [2, 3, 4, 5, 6].forEach(n => sel.add(new Option(n, n)));
+    sel.value = setsOf(ex);
+    sel.onchange = () => { state.sets[ex.name] = Number(sel.value); save(); render(); };
+    row.append(lab, sel);
+
+    const grid = document.createElement("div");
+    grid.className = "sets";
+    for (let i = 0; i < 6; i++) {
+      const inp = document.createElement("input");
+      inp.type = "number"; inp.inputMode = "numeric"; inp.min = 0;
+      inp.placeholder = "Satz " + (i + 1);
+      inp.setAttribute("aria-label", `${ex.name} Satz ${i + 1}`);
+      inp.value = (data.reps[ex.name] || [])[i] ?? "";
+      inp.disabled = i >= setsOf(ex);
+      inp.oninput = () => {
+        const d = ensure(state.week, si);
+        (d.reps[ex.name] ||= [])[i] = inp.value;
+        save();
+        updateStatus(ex, si, st);
+      };
+      grid.append(inp);
+    }
+
+    const st = document.createElement("p");
+    st.className = "status " + (CLS[status] || "");
+    st.textContent = status;
+
+    card.append(h, v, row, grid, st);
+    panel.append(card);
+  });
+}
+
+// nur Status-Zeile aktualisieren, damit die Tastatur beim Tippen offen bleibt
+function updateStatus(ex, si, el) {
+  const s = statusOf(ex, peek(state.week, si));
+  el.textContent = s;
+  el.className = "status " + (CLS[s] || "");
+}
+
+// ---- Einstellungen
+function renderSettings() {
+  const box = $("starts");
+  box.innerHTML = "";
+  PLAN.forEach(ex => {
+    const row = document.createElement("div");
+    row.className = "setting";
+    const l = document.createElement("label"); l.textContent = "Startstufe: " + ex.name;
+    const i = document.createElement("input");
+    i.type = "number"; i.min = 1; i.max = maxStage(ex); i.value = startOf(ex);
+    i.onchange = () => {
+      const n = Math.min(maxStage(ex), Math.max(1, Number(i.value) || 1));
+      state.start[ex.name] = n; i.value = n; save(); render();
+    };
+    row.append(l, i);
+    box.append(row);
+  });
+}
+
+// ============================================================ Export und Backup
+const esc = v => { const s = String(v ?? ""); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+
+function download(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function csvRows() {
+  const rows = [["Block", "Woche", "Einheit", "Übung", "Stufe", "Variante", "Sätze", "Satz 1", "Satz 2", "Satz 3", "Satz 4", "Satz 5", "Satz 6", "Schwächster Satz", "Summe", "Status"]];
+  const weeks = Object.keys(state.weeks).map(Number).sort((a, b) => a - b);
+  for (const w of weeks) {
+    SESSIONS.forEach((s, si) => {
+      const data = peek(w, si);
+      exercisesOf(s.pattern).forEach(ex => {
+        const raw = data.reps[ex.name] || [];
+        const nums = raw.slice(0, 6).map(v => (v === "" || v == null ? "" : Number(v)));
+        const filled = nums.filter(v => v !== "");
+        const status = statusOf(ex, data);
+        const jj = status === "Jiu Jitsu ersetzt" && hasData(w);
+        if (!filled.length && !jj) return;
+        const stage = stageFor(ex, w, si);
+        const cells = Array.from({ length: 6 }, (_, i) => nums[i] ?? "");
+        rows.push([state.block, w, s.name, ex.name, stage, LADDERS[ex.name][stage - 1], setsOf(ex), ...cells,
+          filled.length ? Math.min(...filled) : "", filled.reduce((a, b) => a + b, 0), status]);
+      });
+    });
+  }
+  return rows;
+}
+
+// ============================================================ Ereignisse
+$("prev").onclick = () => { state.week = Math.max(1, state.week - 1); save(); render(); };
+$("next").onclick = () => { state.week += 1; save(); render(); };
+$("block").onchange = () => { state.block = $("block").value.trim() || "Block 1"; save(); };
+
+$("exportCsv").onclick = () =>
+  download("progression.csv", "\ufeff" + csvRows().map(r => r.map(esc).join(";")).join("\n"), "text/csv");
+$("exportJson").onclick = () =>
+  download("progression-backup.json", JSON.stringify(state, null, 2), "application/json");
+$("importJson").onclick = () => $("file").click();
+$("file").onchange = async () => {
+  const f = $("file").files[0];
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (typeof data !== "object" || !data.weeks) throw new Error("kein Backup");
+    state = Object.assign({ block: "Block 1", week: 1, session: 0, sets: {}, start: {}, weeks: {} }, data);
+    save(); renderSettings(); render();
+  } catch (e) {
+    alert("Diese Datei ist kein gültiges Backup.");
+  }
+  $("file").value = "";
+};
+
+// ============================================================ Start
+navigator.storage?.persist?.();   // bittet den Browser, die Daten nicht automatisch zu löschen
+renderSettings();
+render();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
+</script>
+</body>
+</html>
