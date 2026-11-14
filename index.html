@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -67,50 +67,51 @@
 </head>
 <body>
 <main>
-  <!-- ======================= Log-Ansicht ======================= -->
+  <!-- ======================= Log view ======================= -->
   <div id="logView">
     <div class="top">
       <h1>Progression</h1>
-      <button id="settingsBtn">Einstellungen</button>
+      <button id="settingsBtn">Settings</button>
     </div>
     <div class="weekbar">
-      <button id="prev" aria-label="Vorherige Woche">‹</button>
+      <button id="prev" aria-label="Previous week">‹</button>
       <strong id="weekLabel"></strong>
-      <button id="next" aria-label="Nächste Woche">›</button>
+      <button id="next" aria-label="Next week">›</button>
     </div>
     <div class="tabs" id="tabs" role="tablist"></div>
     <div id="panel"></div>
 
     <div class="actions">
-      <button id="exportCsv" class="primary">Export als CSV (für das große Sheet)</button>
-      <button id="exportJson">Backup speichern (JSON)</button>
-      <button id="importJson">Backup wiederherstellen</button>
+      <button id="exportCsv" class="primary">Export CSV (for your master sheet)</button>
+      <button id="exportJson">Save backup (JSON)</button>
+      <button id="importJson">Restore backup</button>
       <input type="file" id="file" accept="application/json,.json" hidden>
     </div>
-    <p class="note">Die Daten liegen nur in diesem Browser auf diesem Gerät. Speichere regelmäßig ein Backup. Es enthält auch deine Einstellungen und Leitern.</p>
+    <p class="note">Your data is stored only in this browser on this device. Save a backup regularly. It includes your settings and ladders.</p>
   </div>
 
-  <!-- ======================= Einstellungen ======================= -->
+  <!-- ======================= Settings ======================= -->
   <div id="settingsView" hidden>
     <div class="top">
-      <button id="back">‹ Zurück</button>
-      <h1>Einstellungen</h1>
+      <button id="back">‹ Back</button>
+      <h1>Settings</h1>
     </div>
-    <p class="note">Band 4 = stärkste Unterstützung, Band 1 = leichteste. Die Stufen laufen von oben (leicht) nach unten (schwer). Leere Felder werden übersprungen, am Ende dürfen Felder frei bleiben. Wenn du Stufen einfügst oder löschst, verschiebt sich die Nummerierung, prüfe dann die Startstufe.</p>
-    <label class="note" for="block">Block-Name (erscheint im CSV)</label>
+    <p class="note">Band 5 = strongest assistance, Band 1 = lightest. Levels run from top (easy) to bottom (hard). Empty fields are skipped, and trailing fields may stay empty. Inserting or deleting levels shifts the numbering, so check the start level afterwards.</p>
+    <label class="note" for="block">Block name (used in the CSV)</label>
     <input type="text" id="block" style="width:100%;margin-bottom:14px">
     <div id="exList"></div>
   </div>
 </main>
 
 <script>
-// ============================================================ Leitern (Standardwerte)
-// Band 4 = stärkste Unterstützung, Band 1 = leichteste
-const BAND = n => [4, 3, 2, 1].map(k => `${n}, Band ${k}`);
+// ============================================================ Ladders (defaults)
+// Band 5 = strongest assistance, Band 1 = lightest
+const BAND = n => [5, 4, 3, 2, 1].map(k => `${n}, Band ${k}`);
 const KG = (n, list) => list.map(k => `${n} + ${k} kg`);
+const VEST = (arr) => arr.map((s, i) => (i === arr.length - 1 ? s + " (vest)" : s));
 
 const DEFAULT_LADDERS = {
-  "Planche push up progression": [
+  "Planche Push-up Progression": [
     "Waist-Height Incline Push-ups", "Knee-Height Incline Push-ups", "Deep Push-ups",
     "Core-Level Pseudo-Planche Push-ups", "Waist-Level Pseudo-Planche Push-ups", "Hip-Level Pseudo-Planche Push-ups",
     ...BAND("Tuck Planche Raises"), "Tuck Planche Raises", "Slow Tuck Planche Raises",
@@ -118,36 +119,36 @@ const DEFAULT_LADDERS = {
     "Slow Super Advanced Tuck Planche Raises",
     ...BAND("Slow Planche Raises"), "Slow Planche Raises"
   ],
-  "Pike push up progression": [
-    "Pike Push-ups, Hände erhöht", "Pike Push-ups", "Deep Pike Push-ups",
+  "Pike / Handstand Push-up Progression": [
+    "Pike Push-ups, Hands Elevated", "Pike Push-ups", "Deep Pike Push-ups",
     "Knee-Height Decline Pike Push-ups", "Hip-Height Decline Pike Push-ups", "Vertical Decline Pike Push-ups",
-    "Wall Handstand Push-ups, nur Negativ", "Wall Handstand Push-ups, Teilbewegung",
+    "Wall Handstand Push-ups, Negative Only", "Wall Handstand Push-ups, Partial Range",
     "Deep Chest-to-Wall Handstand Push-ups", "Deep Handstand Push-ups",
     "90° Handstand Push-ups", "Deep 90° Handstand Push-ups",
-    "Freistehende Handstand Push-ups, nur Negativ", "Freistehende Handstand Push-ups"
+    "Freestanding Handstand Push-ups, Negative Only", "Freestanding Handstand Push-ups"
   ],
   "Dips": [
-    ...BAND("Dips"), "Dips, Körpergewicht",
-    ...KG("Dips", [5, 10, 15, 20, 25, 30]).map((s, i) => i === 5 ? s + " (Weste)" : s),
+    ...BAND("Dips"), "Dips, Bodyweight",
+    ...VEST(KG("Dips", [5, 10, 15, 20, 25, 30])),
     ...KG("Dips", [35, 40, 45])
   ],
-  "Pistol squat": [
-    "Box Pistol Squat, hohe Box", "Box Pistol Squat, mittlere Box", "Box Pistol Squat, tiefe Box",
-    "Pistol Squat mit Hand-Assistenz",
-    ...BAND("Pistol Squat"), "Pistol Squat, frei",
-    ...KG("Pistol Squat", ["2,5", "7,5", 10, 15])
+  "Pistol Squat": [
+    "Box Pistol Squat, High Box", "Box Pistol Squat, Medium Box", "Box Pistol Squat, Low Box",
+    "Pistol Squat with Hand Assist",
+    ...BAND("Pistol Squat"), "Pistol Squat, Unassisted",
+    ...KG("Pistol Squat", ["2.5", "7.5", 10, 15])
   ],
   "Core 1 Push (Ab Wheel)": [
-    "Ab Wheel, kniend, 1/4 Strecke", "Ab Wheel, kniend, halbe Strecke", "Ab Wheel, kniend, 3/4 Strecke", "Ab Wheel, kniend, volle Strecke",
-    "Ab Wheel, aus dem Stand, 1/4 Strecke", "Ab Wheel, aus dem Stand, halbe Strecke", "Ab Wheel, aus dem Stand, 3/4 Strecke", "Ab Wheel, aus dem Stand, volle Strecke",
-    "Ab Wheel, aus dem Stand, volle Strecke, 2 s Pause", "Ab Wheel, aus dem Stand, volle Strecke, Weste 5 kg",
-    "Ab Wheel, aus dem Stand, volle Strecke, Weste 10 kg"
+    "Ab Wheel, Kneeling, 1/4 Range", "Ab Wheel, Kneeling, Half Range", "Ab Wheel, Kneeling, 3/4 Range", "Ab Wheel, Kneeling, Full Range",
+    "Ab Wheel, Standing, 1/4 Range", "Ab Wheel, Standing, Half Range", "Ab Wheel, Standing, 3/4 Range", "Ab Wheel, Standing, Full Range",
+    "Ab Wheel, Standing, Full Range, 2 s Pause", "Ab Wheel, Standing, Full Range, 5 kg Vest",
+    "Ab Wheel, Standing, Full Range, 10 kg Vest"
   ],
   "Core 2 Push (Dead Bug)": [
-    "Dead Bug, Knie angewinkelt", "Dead Bug, Arme und Beine im Wechsel", "Dead Bug, Beine gestreckt",
-    "Dead Bug mit Kurzhantel 2,5 kg", "Dead Bug mit Kurzhantel 7,5 kg",
-    "Hollow Body Rocks, Knie angewinkelt", "Hollow Body Rocks", "Hollow Body Rocks, Arme gestreckt",
-    "Hollow Body Rocks, Weste 5 kg"
+    "Dead Bug, Knees Bent", "Dead Bug, Alternating Arms and Legs", "Dead Bug, Straight Legs",
+    "Dead Bug with 2.5 kg Dumbbell", "Dead Bug with 7.5 kg Dumbbell",
+    "Hollow Body Rocks, Knees Bent", "Hollow Body Rocks", "Hollow Body Rocks, Arms Extended",
+    "Hollow Body Rocks, 5 kg Vest"
   ],
   "Front Lever": [
     ...BAND("Tuck Front Lever"), "Tuck Front Lever",
@@ -156,85 +157,120 @@ const DEFAULT_LADDERS = {
     ...BAND("Straddle Front Lever"), "Straddle Front Lever",
     ...BAND("Full Front Lever"), "Full Front Lever"
   ],
-  "Klimmzug": [
-    "Negative Klimmzüge", ...BAND("Klimmzüge"), "Klimmzüge, Körpergewicht",
-    ...KG("Klimmzüge", [5, 10, 15, 20, 25, 30]).map((s, i) => i === 5 ? s + " (Weste)" : s),
-    ...KG("Klimmzüge", [35, 40, 45])
+  "Pull-up": [
+    "Negative Pull-ups", ...BAND("Pull-ups"), "Pull-ups, Bodyweight",
+    ...VEST(KG("Pull-ups", [5, 10, 15, 20, 25, 30])),
+    ...KG("Pull-ups", [35, 40, 45])
   ],
-  "Rudern / FL Pull-ups": [
-    "Rudern Australian", "Rudern Australian, Füße erhöht",
-    ...BAND("Tuck FL Pull-ups"), "Tuck FL Pull-ups",
-    ...BAND("Advanced Tuck FL Pull-ups"), "Advanced Tuck FL Pull-ups",
-    ...BAND("One-Leg FL Pull-ups"), "One-Leg FL Pull-ups",
-    ...BAND("Straddle FL Pull-ups"), "Straddle FL Pull-ups",
-    ...BAND("Full FL Pull-ups"), "Full FL Pull-ups"
+  // Weighted rows with elevated feet bridge the gap to the banded Tuck FL pull-ups
+  "Row / FL Pull-up": [
+    "Australian Row", "Australian Row, Feet Elevated",
+    ...VEST(KG("Australian Row, Feet Elevated", [5, 10, 15, 20, 25, 30])),
+    ...BAND("Tuck FL Pull-up"), "Tuck FL Pull-up",
+    ...BAND("Advanced Tuck FL Pull-up"), "Advanced Tuck FL Pull-up",
+    ...BAND("One-Leg FL Pull-up"), "One-Leg FL Pull-up",
+    ...BAND("Straddle FL Pull-up"), "Straddle FL Pull-up",
+    ...BAND("Full FL Pull-up"), "Full FL Pull-up"
   ],
-  "Hüftheben": [
-    "Hüftheben beidbeinig", "Hüftheben beidbeinig, 2 s Pause oben", "Hüftheben beidbeinig, Schultern erhöht",
-    "Hüftheben einbeinig", "Hüftheben einbeinig, 2 s Pause oben", "Hüftheben einbeinig, Schultern erhöht",
-    ...KG("Hüftheben einbeinig, Schultern erhöht", ["2,5", "7,5", 10, 15]),
-    "Hüftheben einbeinig, Schultern erhöht + 30 kg (Weste)"
+  "Hip Raise": [
+    "Glute Bridge", "Glute Bridge, 2 s Pause at Top", "Glute Bridge, Shoulders Elevated",
+    "Single-Leg Glute Bridge", "Single-Leg Glute Bridge, 2 s Pause at Top", "Single-Leg Glute Bridge, Shoulders Elevated",
+    ...KG("Single-Leg Glute Bridge, Shoulders Elevated", ["2.5", "7.5", 10, 15]),
+    "Single-Leg Glute Bridge, Shoulders Elevated + 30 kg (vest)"
   ],
-  "Core 1 Pull (Hanging)": [
-    "Hanging Knee Raises", "Hanging Knee Raises, 1 s Pause oben", "Hanging Leg Raises, angewinkelt",
-    "Hanging Leg Raises, gestreckt bis 90°", "Hanging Leg Raises, gestreckt, 1 s Pause oben",
-    "Toes to Bar, mit Schwung", "Toes to Bar, strikt", "Toes to Bar, strikt, 1 s Pause oben",
-    "Toes to Bar, strikt, 3 s Absenken", "Toes to Bar, strikt, Weste 5 kg"
+  "Core 1 Pull (Lying Leg Raise)": [
+    "Lying Knee Raises", "Lying Knee Raises, 1 s Pause at Top", "Lying Leg Raises, Knees Bent",
+    "Lying Leg Raises, Straight Legs", "Lying Leg Raises, Straight Legs, 1 s Pause at Top",
+    "Lying Leg Raises, Straight Legs, 3 s Lowering",
+    "Lying Leg Raises with 2.5 kg Dumbbell Between Feet", "Lying Leg Raises with 7.5 kg Dumbbell Between Feet",
+    "V-Ups, Knees Bent", "V-Ups", "V-Ups, 3 s Lowering",
+    "Dragon Flag, Tuck Negative", "Dragon Flag, Negative", "Dragon Flag, Tuck", "Dragon Flag"
   ],
-  "Core 2 Pull (Seitstütz)": [
-    "Seitstütz mit Hüftheben, Knie am Boden", "Seitstütz mit Hüftheben", "Seitstütz mit Hüftheben, 1 s Pause oben",
-    "Seitstütz mit Hüftheben, Hand am Kopf",
-    "Copenhagen Hüftheben, Knie auf Bank", "Copenhagen Hüftheben", "Copenhagen Hüftheben, 1 s Pause oben",
-    "Copenhagen Hüftheben, Weste 5 kg"
+  "Core 2 Pull (Side Plank)": [
+    "Side Plank Hip Raise, Knee Down", "Side Plank Hip Raise", "Side Plank Hip Raise, 1 s Pause at Top",
+    "Side Plank Hip Raise, Hand Behind Head",
+    "Copenhagen Hip Raise, Knee on Bench", "Copenhagen Hip Raise", "Copenhagen Hip Raise, 1 s Pause at Top",
+    "Copenhagen Hip Raise, 5 kg Vest"
   ]
 };
 
-// pattern, Sätze, Wdh min, Wdh max, Einheit, Startstufe (Schätzung, bitte anpassen)
+// pattern, sets, min reps, max reps, unit, start level (estimate, adjust in Settings)
 const PLAN = [
-  ["Push", "Planche push up progression", 4, 5, 8, "Wdh", 5],
-  ["Push", "Pike push up progression", 4, 5, 8, "Wdh", 4],
-  ["Push", "Dips", 4, 5, 8, "Wdh", 6],
-  ["Push", "Pistol squat", 4, 5, 8, "Wdh pro Seite", 4],
-  ["Push", "Core 1 Push (Ab Wheel)", 3, 8, 12, "Wdh", 4],
-  ["Push", "Core 2 Push (Dead Bug)", 3, 8, 12, "Wdh", 2],
-  ["Pull", "Front Lever", 5, 6, 10, "Sek", 5],
-  ["Pull", "Klimmzug", 4, 5, 8, "Wdh", 6],
-  ["Pull", "Rudern / FL Pull-ups", 4, 5, 8, "Wdh", 3],
-  ["Pull", "Hüftheben", 4, 5, 8, "Wdh pro Seite", 4],
-  ["Pull", "Core 1 Pull (Hanging)", 3, 8, 12, "Wdh", 3],
-  ["Pull", "Core 2 Pull (Seitstütz)", 3, 8, 12, "Wdh", 2]
+  ["Push", "Planche Push-up Progression", 4, 3, 8, "reps", 5],
+  ["Push", "Pike / Handstand Push-up Progression", 4, 3, 8, "reps", 4],
+  ["Push", "Dips", 4, 3, 8, "reps", 7],
+  ["Push", "Pistol Squat", 4, 3, 8, "reps per side", 4],
+  ["Push", "Core 1 Push (Ab Wheel)", 3, 8, 12, "reps", 4],
+  ["Push", "Core 2 Push (Dead Bug)", 3, 8, 12, "reps", 2],
+  ["Pull", "Front Lever", 5, 6, 10, "sec", 6],
+  ["Pull", "Pull-up", 4, 3, 8, "reps", 7],
+  ["Pull", "Row / FL Pull-up", 4, 3, 8, "reps", 2],
+  ["Pull", "Hip Raise", 4, 3, 8, "reps per side", 4],
+  ["Pull", "Core 1 Pull (Lying Leg Raise)", 3, 8, 12, "reps", 3],
+  ["Pull", "Core 2 Pull (Side Plank)", 3, 8, 12, "reps", 2]
 ].map(([pattern, name, sets, min, max, unit, start]) => ({ pattern, name, sets, min, max, unit, start }));
 
+const MODE_JJ = "Jiu-Jitsu";
+const MODE_TRAIN = "Training";
+
 const SESSIONS = [
-  { name: "Pull 1", pattern: "Pull", defaultMode: "Training" },
-  { name: "Push 1", pattern: "Push", defaultMode: "Jiu Jitsu" },
-  { name: "Pull 2", pattern: "Pull", defaultMode: "Training" },
-  { name: "Push 2", pattern: "Push", defaultMode: "Training" }
+  { name: "Pull 1", pattern: "Pull", defaultMode: MODE_TRAIN },
+  { name: "Push 1", pattern: "Push", defaultMode: MODE_JJ },
+  { name: "Pull 2", pattern: "Pull", defaultMode: MODE_TRAIN },
+  { name: "Push 2", pattern: "Push", defaultMode: MODE_TRAIN }
 ];
 
-// ============================================================ Zustand, Speicher, Migration
-const KEY = "progression-v3";
-const OLD_KEY = "progression-v2";
-const RENAME = { "Core superset (Push-Tag)": "Core 1 Push (Ab Wheel)", "Core superset (Pull-Tag)": "Core 1 Pull (Hanging)" };
+const ST_JJ = "Replaced by Jiu-Jitsu";
+const ST_UP = "Level up";
+const ST_ADD = "Add reps";
+const ST_CHECK = "Check level";
+const ST_OPEN = "Incomplete";
 
-const fresh = () => ({ version: 3, block: "Block 1", week: 1, session: 0, cfg: {}, ladders: {}, weeks: {} });
+// ============================================================ State, storage, migration
+const KEY = "progression-v4";
+const OLD_KEY = "progression-v3";   // previous (German) version
+
+const fresh = () => ({ version: 4, block: "Block 1", week: 1, session: 0, cfg: {}, ladders: {}, weeks: {} });
 
 function readJson(key) {
   try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
 }
 
-// Alte Daten (Version 2) übernehmen: Einträge und Satzanzahl bleiben, Startstufen und Leitern sind neu
-function migrate(old) {
+// Version 3 used German names. Entries, set counts and custom ladders are carried over.
+// Start levels are only carried over for custom ladders, because the default ladders changed.
+const NAMES_V3 = {
+  "Planche push up progression": "Planche Push-up Progression",
+  "Pike push up progression": "Pike / Handstand Push-up Progression",
+  "Dips": "Dips",
+  "Pistol squat": "Pistol Squat",
+  "Core 1 Push (Ab Wheel)": "Core 1 Push (Ab Wheel)",
+  "Core 2 Push (Dead Bug)": "Core 2 Push (Dead Bug)",
+  "Front Lever": "Front Lever",
+  "Klimmzug": "Pull-up",
+  "Rudern / FL Pull-ups": "Row / FL Pull-up",
+  "Hüftheben": "Hip Raise",
+  "Core 1 Pull (Hanging)": "Core 1 Pull (Lying Leg Raise)",
+  "Core 2 Pull (Seitstütz)": "Core 2 Pull (Side Plank)"
+};
+
+function migrateV3(old) {
   const s = fresh();
   s.block = old.block || s.block;
   s.week = old.week || 1;
   s.session = old.session || 0;
-  for (const [name, n] of Object.entries(old.sets || {})) (s.cfg[RENAME[name] || name] ||= {}).sets = n;
+  const map = n => NAMES_V3[n] || n;
+  for (const [name, c] of Object.entries(old.cfg || {})) {
+    const next = {};
+    for (const k of ["sets", "min", "max"]) if (c[k] != null) next[k] = c[k];
+    if (c.start != null && old.ladders && old.ladders[name]) next.start = c.start;
+    if (Object.keys(next).length) s.cfg[map(name)] = next;
+  }
+  for (const [name, arr] of Object.entries(old.ladders || {})) s.ladders[map(name)] = arr;
   for (const [w, sess] of Object.entries(old.weeks || {})) {
     for (const [sn, d] of Object.entries(sess)) {
       const reps = {};
-      for (const [name, arr] of Object.entries(d.reps || {})) reps[RENAME[name] || name] = arr;
-      ((s.weeks[w] ||= {})[sn]) = { mode: d.mode, reps };
+      for (const [name, arr] of Object.entries(d.reps || {})) reps[map(name)] = arr;
+      (s.weeks[w] ||= {})[sn] = { mode: d.mode === "Jiu Jitsu" ? MODE_JJ : d.mode, reps };
     }
   }
   return s;
@@ -242,15 +278,17 @@ function migrate(old) {
 
 function normalize(data) {
   if (!data || typeof data !== "object" || !data.weeks) return null;
-  return data.version === 3 ? Object.assign(fresh(), data) : migrate(data);
+  if (data.version === 4) return Object.assign(fresh(), data);
+  if (data.version === 3) return migrateV3(data);
+  return null;
 }
 
-let state = normalize(readJson(KEY)) || (readJson(OLD_KEY) ? migrate(readJson(OLD_KEY)) : null) || fresh();
+let state = normalize(readJson(KEY)) || normalize(readJson(OLD_KEY)) || fresh();
 function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* Speicher voll oder gesperrt */ }
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage full or blocked */ }
 }
 
-// ---- Zugriff auf Einstellungen
+// ---- Access to settings
 const cfgOf = (ex, k) => state.cfg[ex.name]?.[k] ?? ex[k];
 const setCfg = (ex, k, v) => { (state.cfg[ex.name] ||= {})[k] = v; save(); };
 const setsOf = ex => cfgOf(ex, "sets");
@@ -258,65 +296,67 @@ const minOf = ex => cfgOf(ex, "min");
 const maxOf = ex => cfgOf(ex, "max");
 const startOf = ex => cfgOf(ex, "start");
 
-// leere Felder werden übersprungen
+// empty fields are skipped
 const ladderOf = ex => {
   const l = (state.ladders[ex.name] ?? DEFAULT_LADDERS[ex.name]).map(s => String(s ?? "").trim()).filter(Boolean);
-  return l.length ? l : ["(keine Stufe definiert)"];
+  return l.length ? l : ["(no level defined)"];
 };
 const maxStage = ex => ladderOf(ex).length;
 const exercisesOf = pattern => PLAN.filter(e => e.pattern === pattern);
 
+// read without creating an entry
 function peek(week, si) {
   const s = SESSIONS[si];
   return state.weeks[week]?.[s.name] ?? { mode: s.defaultMode, reps: {} };
 }
+// write (creates the entry)
 function ensure(week, si) {
   const s = SESSIONS[si];
   const w = (state.weeks[week] ||= {});
   return (w[s.name] ||= { mode: s.defaultMode, reps: {} });
 }
 
-// ============================================================ Logik (gleiche Regeln wie die Excel-Tabelle)
+// ============================================================ Logic (same rules as the spreadsheet)
 function statusOf(ex, data) {
-  if (data.mode === "Jiu Jitsu") return "Jiu Jitsu ersetzt";
+  if (data.mode === MODE_JJ) return ST_JJ;
   const n = setsOf(ex);
   const reps = (data.reps[ex.name] || []).slice(0, n)
     .filter(v => v !== "" && v != null).map(Number).filter(v => !Number.isNaN(v));
   if (!reps.length) return "";
-  if (reps.length < n) return "offen";
+  if (reps.length < n) return ST_OPEN;
   const low = Math.min(...reps);
-  if (low >= maxOf(ex)) return "Stufe hoch";
-  if (low >= minOf(ex)) return "Wdh steigern";
-  return "Stufe prüfen";
+  if (low >= maxOf(ex)) return ST_UP;
+  if (low >= minOf(ex)) return ST_ADD;
+  return ST_CHECK;
 }
 
-// Startstufe plus ein Schritt für jede frühere Einheit mit Status "Stufe hoch"
+// Start level plus one step for every earlier session of this pattern with status "Level up"
 function stageFor(ex, week, si) {
   const o = (week - 1) * 2 + (si >= 2 ? 1 : 0);
   let stage = startOf(ex);
   for (let j = 0; j < o; j++) {
     const w = Math.floor(j / 2) + 1;
     const s = ex.pattern === "Pull" ? (j % 2 === 0 ? 0 : 2) : (j % 2 === 0 ? 1 : 3);
-    if (statusOf(ex, peek(w, s)) === "Stufe hoch") stage = Math.min(maxStage(ex), stage + 1);
+    if (statusOf(ex, peek(w, s)) === ST_UP) stage = Math.min(maxStage(ex), stage + 1);
   }
   return Math.min(Math.max(stage, 1), maxStage(ex));
 }
 
 const hasData = w => SESSIONS.some((s, si) => Object.values(peek(w, si).reps).some(a => a.some(v => v !== "" && v != null)));
 
-// ============================================================ Log-Ansicht
+// ============================================================ Log view
 const $ = id => document.getElementById(id);
-const CLS = { "Stufe hoch": "up", "Wdh steigern": "mid", "Stufe prüfen": "low" };
+const CLS = { [ST_UP]: "up", [ST_ADD]: "mid", [ST_CHECK]: "low" };
 
 function render() {
-  $("weekLabel").textContent = "Woche " + state.week;
+  $("weekLabel").textContent = "Week " + state.week;
   $("tabs").innerHTML = "";
   SESSIONS.forEach((s, si) => {
     const b = document.createElement("button");
     b.textContent = s.name;
     b.setAttribute("role", "tab");
     b.setAttribute("aria-selected", String(si === state.session));
-    if (peek(state.week, si).mode === "Jiu Jitsu") b.classList.add("jj");
+    if (peek(state.week, si).mode === MODE_JJ) b.classList.add("jj");
     b.onclick = () => { state.session = si; save(); render(); };
     $("tabs").append(b);
   });
@@ -328,15 +368,15 @@ function render() {
   if (s.pattern === "Push") {
     const sel = document.createElement("select");
     sel.className = "mode";
-    sel.setAttribute("aria-label", s.name + ": Training oder Jiu Jitsu");
-    ["Training", "Jiu Jitsu"].forEach(m => sel.add(new Option(m, m)));
+    sel.setAttribute("aria-label", s.name + ": Training or Jiu-Jitsu");
+    [MODE_TRAIN, MODE_JJ].forEach(m => sel.add(new Option(m, m)));
     sel.value = data.mode;
     sel.onchange = () => { ensure(state.week, si).mode = sel.value; save(); render(); };
     panel.append(sel);
-    if (data.mode === "Jiu Jitsu") {
+    if (data.mode === MODE_JJ) {
       const p = document.createElement("p");
       p.className = "note";
-      p.textContent = "Jiu Jitsu ersetzt diese Einheit. Die Stufen bleiben unverändert. Wähle Training, um Sätze einzutragen.";
+      p.textContent = "Jiu-Jitsu replaces this session. Levels stay unchanged. Choose Training to log sets.";
       panel.append(p);
       return;
     }
@@ -356,13 +396,13 @@ function render() {
 
     const v = document.createElement("p");
     v.className = "variant";
-    v.textContent = `Stufe ${stage} von ${ladder.length}: ${ladder[stage - 1]}`;
+    v.textContent = `Level ${stage} of ${ladder.length}: ${ladder[stage - 1]}`;
 
     const row = document.createElement("div");
     row.className = "row";
-    const lab = document.createElement("label"); lab.textContent = "Sätze";
+    const lab = document.createElement("label"); lab.textContent = "Sets";
     const sel = document.createElement("select");
-    sel.setAttribute("aria-label", "Anzahl Sätze " + ex.name);
+    sel.setAttribute("aria-label", "Number of sets " + ex.name);
     [2, 3, 4, 5, 6].forEach(n => sel.add(new Option(n, n)));
     sel.value = setsOf(ex);
     sel.onchange = () => { setCfg(ex, "sets", Number(sel.value)); render(); };
@@ -374,8 +414,8 @@ function render() {
     for (let i = 0; i < 6; i++) {
       const inp = document.createElement("input");
       inp.type = "number"; inp.inputMode = "numeric"; inp.min = 0;
-      inp.placeholder = "Satz " + (i + 1);
-      inp.setAttribute("aria-label", `${ex.name} Satz ${i + 1}`);
+      inp.placeholder = "Set " + (i + 1);
+      inp.setAttribute("aria-label", `${ex.name} set ${i + 1}`);
       inp.value = (data.reps[ex.name] || [])[i] ?? "";
       inp.disabled = i >= setsOf(ex);
       inp.oninput = () => {
@@ -395,14 +435,14 @@ function render() {
   });
 }
 
-// nur Status-Zeile aktualisieren, damit die Tastatur beim Tippen offen bleibt
+// update only the status line, so the keyboard stays open while typing
 function updateStatus(ex, si, el) {
   const s = statusOf(ex, peek(state.week, si));
   el.textContent = s;
   el.className = "status " + (CLS[s] || "");
 }
 
-// ============================================================ Einstellungen
+// ============================================================ Settings
 function numberField(label, value, attrs, onChange) {
   const wrap = document.createElement("div");
   const l = document.createElement("label"); l.textContent = label;
@@ -419,7 +459,7 @@ function buildEditor(ex, body) {
   cfg.className = "cfg";
 
   const wrapSets = document.createElement("div");
-  const ls = document.createElement("label"); ls.textContent = "Sätze";
+  const ls = document.createElement("label"); ls.textContent = "Sets";
   const ss = document.createElement("select");
   [2, 3, 4, 5, 6].forEach(n => ss.add(new Option(n, n)));
   ss.value = setsOf(ex);
@@ -429,9 +469,9 @@ function buildEditor(ex, body) {
   const clamp = (i, lo, hi) => Math.min(hi, Math.max(lo, Number(i.value) || lo));
   cfg.append(
     wrapSets,
-    numberField("Wdh min", minOf(ex), { min: 1, max: 99 }, i => { const n = clamp(i, 1, 99); i.value = n; setCfg(ex, "min", n); }),
-    numberField("Wdh max", maxOf(ex), { min: 1, max: 99 }, i => { const n = clamp(i, 1, 99); i.value = n; setCfg(ex, "max", n); }),
-    numberField("Startstufe", startOf(ex), { min: 1 }, i => { const n = clamp(i, 1, maxStage(ex)); i.value = n; setCfg(ex, "start", n); })
+    numberField("Min reps", minOf(ex), { min: 1, max: 99 }, i => { const n = clamp(i, 1, 99); i.value = n; setCfg(ex, "min", n); }),
+    numberField("Max reps", maxOf(ex), { min: 1, max: 99 }, i => { const n = clamp(i, 1, 99); i.value = n; setCfg(ex, "max", n); }),
+    numberField("Start level", startOf(ex), { min: 1 }, i => { const n = clamp(i, 1, maxStage(ex)); i.value = n; setCfg(ex, "start", n); })
   );
 
   const list = document.createElement("div");
@@ -444,8 +484,8 @@ function buildEditor(ex, body) {
       row.className = "step";
       const n = document.createElement("span"); n.textContent = i + 1;
       const inp = document.createElement("input");
-      inp.type = "text"; inp.value = arr[i] ?? ""; inp.placeholder = "leer";
-      inp.setAttribute("aria-label", `${ex.name} Stufe ${i + 1}`);
+      inp.type = "text"; inp.value = arr[i] ?? ""; inp.placeholder = "empty";
+      inp.setAttribute("aria-label", `${ex.name} level ${i + 1}`);
       inp.oninput = () => {
         const a = (state.ladders[ex.name] ||= DEFAULT_LADDERS[ex.name].slice());
         while (a.length <= i) a.push("");
@@ -461,7 +501,7 @@ function buildEditor(ex, body) {
   const btns = document.createElement("div");
   btns.className = "btns";
   const add = document.createElement("button");
-  add.textContent = "Stufe hinzufügen";
+  add.textContent = "Add level";
   add.onclick = () => {
     const a = (state.ladders[ex.name] ||= DEFAULT_LADDERS[ex.name].slice());
     const target = Math.max(20, a.length) + 1;
@@ -469,9 +509,9 @@ function buildEditor(ex, body) {
     save(); draw();
   };
   const reset = document.createElement("button");
-  reset.textContent = "Standard wiederherstellen";
+  reset.textContent = "Restore defaults";
   reset.onclick = () => {
-    if (!confirm("Leiter für " + ex.name + " auf den Standard zurücksetzen?")) return;
+    if (!confirm("Reset the ladder for " + ex.name + " to the defaults?")) return;
     delete state.ladders[ex.name]; save(); draw();
   };
   btns.append(add, reset);
@@ -499,7 +539,7 @@ function show(view) {
   if (view === "settings") renderSettings(); else render();
 }
 
-// ============================================================ Export und Backup
+// ============================================================ Export and backup
 const esc = v => { const s = String(v ?? ""); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
 
 function download(name, text, type) {
@@ -510,7 +550,7 @@ function download(name, text, type) {
 }
 
 function csvRows() {
-  const rows = [["Block", "Woche", "Einheit", "Übung", "Stufe", "Variante", "Sätze", "Satz 1", "Satz 2", "Satz 3", "Satz 4", "Satz 5", "Satz 6", "Schwächster Satz", "Summe", "Status"]];
+  const rows = [["Block", "Week", "Session", "Exercise", "Level", "Variant", "Sets", "Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6", "Weakest Set", "Total", "Status"]];
   const weeks = Object.keys(state.weeks).map(Number).sort((a, b) => a - b);
   for (const w of weeks) {
     SESSIONS.forEach((s, si) => {
@@ -520,7 +560,7 @@ function csvRows() {
         const nums = raw.slice(0, 6).map(v => (v === "" || v == null ? "" : Number(v)));
         const filled = nums.filter(v => v !== "");
         const status = statusOf(ex, data);
-        const jj = status === "Jiu Jitsu ersetzt" && hasData(w);
+        const jj = status === ST_JJ && hasData(w);
         if (!filled.length && !jj) return;
         const stage = stageFor(ex, w, si);
         const cells = Array.from({ length: 6 }, (_, i) => nums[i] ?? "");
@@ -532,7 +572,7 @@ function csvRows() {
   return rows;
 }
 
-// ============================================================ Ereignisse
+// ============================================================ Events
 $("prev").onclick = () => { state.week = Math.max(1, state.week - 1); save(); render(); };
 $("next").onclick = () => { state.week += 1; save(); render(); };
 $("settingsBtn").onclick = () => show("settings");
@@ -549,17 +589,17 @@ $("file").onchange = async () => {
   if (!f) return;
   try {
     const data = normalize(JSON.parse(await f.text()));
-    if (!data) throw new Error("kein Backup");
+    if (!data) throw new Error("not a backup");
     state = data;
     save(); render();
   } catch (e) {
-    alert("Diese Datei ist kein gültiges Backup.");
+    alert("This file is not a valid backup.");
   }
   $("file").value = "";
 };
 
 // ============================================================ Start
-navigator.storage?.persist?.();   // bittet den Browser, die Daten nicht automatisch zu löschen
+navigator.storage?.persist?.();   // asks the browser not to evict the data automatically
 render();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
 </script>
