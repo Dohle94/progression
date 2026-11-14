@@ -1,6 +1,6 @@
 // Minimaler Service Worker: legt die App-Dateien im Cache ab, damit sie offline startet.
 // Bei jeder Änderung an den Dateien die Versionsnummer unten erhöhen, sonst bleibt die alte Version im Cache.
-const CACHE = "progression-v3";
+const CACHE = "progression-v4";
 const FILES = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", e => {
