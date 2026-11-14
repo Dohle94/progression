@@ -206,10 +206,10 @@ const PLAN = [
 ].map(([pattern, name, sets, min, max, unit, start]) => ({ pattern, name, sets, min, max, unit, start }));
 
 const SESSIONS = [
-  { name: "Push 1", pattern: "Push", defaultMode: "Jiu Jitsu" },
   { name: "Pull 1", pattern: "Pull", defaultMode: "Training" },
-  { name: "Push 2", pattern: "Push", defaultMode: "Training" },
-  { name: "Pull 2", pattern: "Pull", defaultMode: "Training" }
+  { name: "Push 1", pattern: "Push", defaultMode: "Jiu Jitsu" },
+  { name: "Pull 2", pattern: "Pull", defaultMode: "Training" },
+  { name: "Push 2", pattern: "Push", defaultMode: "Training" }
 ];
 
 // ============================================================ Zustand, Speicher, Migration
@@ -296,7 +296,7 @@ function stageFor(ex, week, si) {
   let stage = startOf(ex);
   for (let j = 0; j < o; j++) {
     const w = Math.floor(j / 2) + 1;
-    const s = ex.pattern === "Push" ? (j % 2 === 0 ? 0 : 2) : (j % 2 === 0 ? 1 : 3);
+    const s = ex.pattern === "Pull" ? (j % 2 === 0 ? 0 : 2) : (j % 2 === 0 ? 1 : 3);
     if (statusOf(ex, peek(w, s)) === "Stufe hoch") stage = Math.min(maxStage(ex), stage + 1);
   }
   return Math.min(Math.max(stage, 1), maxStage(ex));
