@@ -24,27 +24,30 @@
   main { max-width: 560px; margin: 0 auto; padding: 16px; }
   h1 { font-size: 1.4rem; margin: 0; }
   h2 { font-size: 1.05rem; margin: 0; }
+  h3 { font-size: .95rem; margin: 18px 0 6px; }
   button, select, input { font: inherit; color: var(--ink); background: var(--surface);
          border: 1px solid var(--line); border-radius: 8px; padding: 10px; min-height: 44px; }
   .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0 12px; }
   .weekbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
   .weekbar button { flex: 0 0 44px; }
   .weekbar strong { flex: 1; text-align: center; }
-  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
-  .tabs button { padding: 8px 4px; }
+  .tabs { display: grid; gap: 6px; margin-bottom: 14px; }
+  .tabs button { padding: 8px 2px; font-size: .9rem; }
   .tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
   .tabs button.jj { opacity: .55; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
           padding: 14px; margin-bottom: 12px; }
   .card h2 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
   .variant { color: var(--muted); margin: 2px 0 10px; font-size: .9rem; }
-  .card h2 .variant { margin: 0; white-space: nowrap; }
+  .card h2 .variant { margin: 0; text-align: right; }
+  .last { color: var(--muted); font-size: .85rem; margin: -4px 0 6px; }
+  .target { color: var(--accent); font-weight: 600; font-size: .95rem; margin: 0 0 2px; }
+  .why { color: var(--muted); font-size: .8rem; margin: 0 0 10px; }
   .row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; color: var(--muted); font-size: .9rem; }
   .row select { width: 5.5rem; }
   .sets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .sets input { width: 100%; text-align: center; }
   .sets input:disabled { opacity: .35; }
-  .last { color: var(--muted); font-size: .85rem; margin: -4px 0 10px; }
   .status { margin: 10px 0 0; font-weight: 600; min-height: 1.4em; }
   .up { color: var(--ok); } .mid, .low { color: var(--warn); }
   .mode { width: 100%; margin-bottom: 12px; }
@@ -52,6 +55,7 @@
   .actions { display: grid; gap: 8px; margin-top: 8px; }
   .actions button { width: 100%; }
   .primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .small { min-height: 36px; padding: 6px 10px; font-size: .85rem; }
   details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; }
   summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; padding: 0 14px; font-weight: 600; }
   .body { padding: 0 14px 14px; }
@@ -62,6 +66,11 @@
   .step span { color: var(--muted); text-align: right; font-size: .85rem; }
   .step input { width: 100%; padding: 8px 10px; }
   .btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .field { display: block; width: 100%; margin-bottom: 10px; }
+  .checks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .checks label { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px;
+                  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  .checks input { min-height: 0; width: 18px; height: 18px; padding: 0; }
   [hidden] { display: none !important; }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 </style>
@@ -83,12 +92,13 @@
     <div id="panel"></div>
 
     <div class="actions">
-      <button id="exportCsv" class="primary">Export CSV (for your master sheet)</button>
+      <button id="exportBlock" class="primary"></button>
+      <button id="exportYear" class="primary"></button>
       <button id="exportJson">Save backup (JSON)</button>
       <button id="importJson">Restore backup</button>
       <input type="file" id="file" accept="application/json,.json" hidden>
     </div>
-    <p class="note">Your data is stored only in this browser on this device. Save a backup regularly. It includes your settings and ladders.</p>
+    <p class="note">CSV files contain your results next to the optimum progressive-overload target for every session. Your data is stored only in this browser on this device. Save a backup regularly. It includes your settings and ladders.</p>
   </div>
 
   <!-- ======================= Settings ======================= -->
@@ -97,15 +107,29 @@
       <button id="back">‹ Back</button>
       <h1>Settings</h1>
     </div>
-    <p class="note">Band 5 = strongest assistance, Band 1 = lightest. Levels run from top (easy) to bottom (hard). Empty fields are skipped, and trailing fields may stay empty. Inserting or deleting levels shifts the numbering, so check the start level afterwards.</p>
+
+    <h3 id="planTitle"></h3>
+    <select id="plan" class="field" aria-label="Training plan for this week"></select>
+    <label class="note" for="fbDays">Full Body sessions per week</label>
+    <input type="number" id="fbDays" min="2" max="5" class="field">
+
+    <h3>Hobby / activity</h3>
+    <label class="note" for="actName">Name</label>
+    <input type="text" id="actName" class="field">
+    <p class="note">The activity trains these muscle groups. Exercises of the selected groups are skipped on the day before and on the day of the activity (set per session in the log).</p>
+    <div class="checks" id="actGroups"></div>
+
+    <h3>Block</h3>
     <label class="note" for="block">Block name (used in the CSV)</label>
-    <input type="text" id="block" style="width:100%;margin-bottom:14px">
+    <input type="text" id="block" class="field">
+
+    <h3>Exercises</h3>
+    <p class="note">Band 5 = strongest assistance, Band 1 = lightest. Levels run from top (easy) to bottom (hard). Empty fields are skipped, and trailing fields may stay empty. Inserting or deleting levels shifts the numbering, so check the start level afterwards.</p>
     <div id="exList"></div>
   </div>
 </main>
 
 <script>
-// ============================================================ Ladders (defaults)
 // Band 5 = strongest assistance, Band 1 = lightest
 const BAND = n => [5, 4, 3, 2, 1].map(k => `${n}, Band ${k}`);
 const KG = (n, list) => list.map(k => `${n} + ${k} kg`);
@@ -190,80 +214,100 @@ const DEFAULT_LADDERS = {
   ]
 };
 
-// pattern, sets, min, max, unit, start level (estimate, adjust in Settings), skipIfJjNext
-// skipIfJjNext: leg and core exercises that are left out on a Pull day when Jiu-Jitsu is the next day
-const PLAN = [
-  ["Push", "Planche Push-up Progression", 4, 5, 10, "reps", 5],
-  ["Push", "Pike / Handstand Push-up Progression", 4, 5, 10, "reps", 4],
-  ["Push", "Dips", 4, 5, 10, "reps", 7],
-  ["Push", "Pistol Squat", 4, 5, 10, "reps per side", 4],
-  ["Push", "Core 1 Push (L-Sit)", 3, 10, 20, "sec", 2],
-  ["Push", "Core 2 Push (Side Plank)", 3, 20, 40, "sec per side", 2],
-  ["Pull", "Front Lever", 5, 6, 10, "sec", 6],
-  ["Pull", "Pull-up", 4, 5, 10, "reps", 7],
-  ["Pull", "Row / FL Pull-up", 4, 5, 10, "reps", 2],
-  ["Pull", "Glute Bridge / Nordic Curl Progression", 4, 5, 10, "reps", 3, true],
-  ["Pull", "Core Pull (Ab Wheel)", 3, 8, 12, "reps", 4, true]
-].map(([pattern, name, sets, min, max, unit, start, skipIfJjNext]) => ({ pattern, name, sets, min, max, unit, start, skipIfJjNext: !!skipIfJjNext }));
 
-const MODE_JJ = "Jiu-Jitsu";
-const MODE_TRAIN = "Training";
-
-const SESSIONS = [
-  { name: "Pull 1", pattern: "Pull", defaultMode: MODE_TRAIN, defaultJjNext: true },
-  { name: "Push 1", pattern: "Push", defaultMode: MODE_JJ, defaultJjNext: false },
-  { name: "Pull 2", pattern: "Pull", defaultMode: MODE_TRAIN, defaultJjNext: false },
-  { name: "Push 2", pattern: "Push", defaultMode: MODE_TRAIN, defaultJjNext: false }
+// Ab compressions for the full body core superset
+DEFAULT_LADDERS["Core 3 (Ab Compressions)"] = [
+  "Seated Ab Compressions, Knees Bent", "Seated Ab Compressions, Feet Lifted",
+  "Seated Pike Compressions, Hands on Floor", "Seated Pike Compressions, Feet Lifted",
+  "L-Sit Pike Compressions", "L-Sit Pike Compressions, 5 kg Vest"
 ];
 
-const NEXT_NORMAL = "Next day: normal";
-const NEXT_JJ = "Next day: Jiu-Jitsu";
+// ============================================================ Exercises and plans
+const GROUPS = ["Push", "Pull", "Legs", "Core"];
 
-const ST_JJ = "Replaced by Jiu-Jitsu";
+// name, muscle group, sets, min, max, unit, start level (estimate, adjust in Settings)
+const EXERCISES = [
+  ["Planche Push-up Progression", "Push", 4, 5, 10, "reps", 5],
+  ["Pike / Handstand Push-up Progression", "Push", 4, 5, 10, "reps", 4],
+  ["Dips", "Push", 4, 5, 10, "reps", 7],
+  ["Pistol Squat", "Legs", 4, 5, 10, "reps per side", 4],
+  ["Core 1 Push (L-Sit)", "Core", 3, 10, 20, "sec", 2],
+  ["Core 2 Push (Side Plank)", "Core", 3, 20, 40, "sec per side", 2],
+  ["Front Lever", "Pull", 5, 6, 10, "sec", 6],
+  ["Pull-up", "Pull", 4, 5, 10, "reps", 7],
+  ["Row / FL Pull-up", "Pull", 4, 5, 10, "reps", 2],
+  ["Glute Bridge / Nordic Curl Progression", "Legs", 4, 5, 10, "reps", 3],
+  ["Core Pull (Ab Wheel)", "Core", 3, 8, 12, "reps", 4],
+  ["Core 3 (Ab Compressions)", "Core", 3, 8, 12, "reps", 1]
+].map(([name, group, sets, min, max, unit, start]) => ({ name, group, sets, min, max, unit, start }));
+const EX = Object.fromEntries(EXERCISES.map(e => [e.name, e]));
+
+// session patterns: [exercise, superset letter]. Exercises are shared between plans, so levels carry over.
+const PATTERNS = {
+  Push: [["Planche Push-up Progression"], ["Pike / Handstand Push-up Progression"], ["Dips"], ["Pistol Squat"],
+         ["Core 1 Push (L-Sit)", "A"], ["Core 2 Push (Side Plank)", "A"]],
+  Pull: [["Front Lever"], ["Pull-up"], ["Row / FL Pull-up"], ["Glute Bridge / Nordic Curl Progression"], ["Core Pull (Ab Wheel)"]],
+  Full: [["Planche Push-up Progression"], ["Row / FL Pull-up"], ["Dips"], ["Pull-up"],
+         ["Pistol Squat", "A"], ["Glute Bridge / Nordic Curl Progression", "A"],
+         ["Core 1 Push (L-Sit)", "B"], ["Core 3 (Ab Compressions)", "B"]]
+};
+const slots = pattern => PATTERNS[pattern].map(([name, ss]) => ({ ex: EX[name], ss: ss || "" }));
+
+const PLAN_LABEL = { pushpull: "Push / Pull", fullbody: "Full Body" };
+const A_NONE = "none", A_TODAY = "today", A_NEXT = "tomorrow";
+
+const S_PUSHPULL = [
+  { name: "Pull 1", pattern: "Pull", defaultActivity: A_NEXT },
+  { name: "Push 1", pattern: "Push", defaultActivity: A_TODAY },
+  { name: "Pull 2", pattern: "Pull", defaultActivity: A_NONE },
+  { name: "Push 2", pattern: "Push", defaultActivity: A_NONE }
+];
+
 const ST_UP = "Level up";
 const ST_ADD = "Add reps";
 const ST_CHECK = "Check level";
 const ST_OPEN = "Incomplete";
 
 // ============================================================ State, storage, migration
-const KEY = "progression-v5";
-const OLD_KEY = "progression-v4";   // previous version
+const KEY = "progression-v6";
+const OLD_KEYS = ["progression-v5", "progression-v4"];
 
-const fresh = () => ({ version: 5, block: "Block 1", week: 1, session: 0, cfg: {}, ladders: {}, weeks: {} });
+const defaultActivity = () => ({ name: "Jiu-Jitsu", groups: ["Push", "Legs", "Core"] });
+const fresh = () => ({ version: 6, block: "Block 1", week: 1, session: 0, fbDays: 3, plans: {},
+                       activity: defaultActivity(), cfg: {}, ladders: {}, jumps: {}, weeks: {} });
 
 function readJson(key) {
   try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
 }
 
-// Version 4 had different core exercises and different Planche and hip ladders.
-// Entries, set counts, rep ranges and custom ladders are carried over for exercises that still exist.
-// Start levels are only carried over for custom ladders, because the default ladders changed.
+// Versions 4 and 5 used a Training / Jiu-Jitsu mode (Push) and a "next day Jiu-Jitsu" flag (Pull).
+// Both become one "activity" setting per session. Entries, set counts, rep ranges and custom ladders are carried over.
 const NAMES_V4 = { "Hip Raise": "Glute Bridge / Nordic Curl Progression" };
 
-function migrateV4(old) {
+function migrateLegacy(old) {
   const s = fresh();
   s.block = old.block || s.block;
   s.week = old.week || 1;
   s.session = old.session || 0;
   const map = n => NAMES_V4[n] || n;
-  const known = new Set(PLAN.map(e => e.name));
   for (const [name, c] of Object.entries(old.cfg || {})) {
     const to = map(name);
-    if (!known.has(to)) continue;
+    if (!EX[to]) continue;
     const next = {};
     for (const k of ["sets", "min", "max"]) if (c[k] != null) next[k] = c[k];
-    if (c.start != null && old.ladders && old.ladders[name]) next.start = c.start;
+    // default ladders are unchanged since version 5, so start levels carry over there
+    if (c.start != null && (old.version === 5 || (old.ladders && old.ladders[name]))) next.start = c.start;
     if (Object.keys(next).length) s.cfg[to] = next;
   }
-  for (const [name, arr] of Object.entries(old.ladders || {})) {
-    if (known.has(map(name))) s.ladders[map(name)] = arr;
-  }
+  for (const [name, arr] of Object.entries(old.ladders || {})) if (EX[map(name)]) s.ladders[map(name)] = arr;
   for (const [w, sess] of Object.entries(old.weeks || {})) {
     for (const [sn, d] of Object.entries(sess)) {
       const reps = {};
-      for (const [name, arr] of Object.entries(d.reps || {})) if (known.has(map(name))) reps[map(name)] = arr;
-      const entry = { mode: d.mode, reps };
-      if (d.jjNext != null) entry.jjNext = d.jjNext;
+      for (const [name, arr] of Object.entries(d.reps || {})) if (EX[map(name)]) reps[map(name)] = arr;
+      const entry = { reps };
+      if (d.mode === "Jiu-Jitsu") entry.activity = A_TODAY;
+      else if (d.jjNext === true) entry.activity = A_NEXT;
+      else if (d.jjNext === false || (/^Push/.test(sn) && d.mode === "Training")) entry.activity = A_NONE;
       (s.weeks[w] ||= {})[sn] = entry;
     }
   }
@@ -272,17 +316,24 @@ function migrateV4(old) {
 
 function normalize(data) {
   if (!data || typeof data !== "object" || !data.weeks) return null;
-  if (data.version === 5) return Object.assign(fresh(), data);
-  if (data.version === 4) return migrateV4(data);
+  if (data.version === 6) {
+    const s = Object.assign(fresh(), data);
+    s.activity = Object.assign(defaultActivity(), data.activity);
+    return s;
+  }
+  if (data.version === 4 || data.version === 5) return migrateLegacy(data);
   return null;
 }
 
-let state = normalize(readJson(KEY)) || normalize(readJson(OLD_KEY)) || fresh();
+let state = normalize(readJson(KEY));
+if (!state) for (const k of OLD_KEYS) { state = normalize(readJson(k)); if (state) break; }
+state = state || fresh();
+
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage full or blocked */ }
 }
 
-// ---- Access to settings
+// ---- Settings access
 const cfgOf = (ex, k) => state.cfg[ex.name]?.[k] ?? ex[k];
 const setCfg = (ex, k, v) => { (state.cfg[ex.name] ||= {})[k] = v; save(); };
 const setsOf = ex => cfgOf(ex, "sets");
@@ -296,32 +347,39 @@ const ladderOf = ex => {
   return l.length ? l : ["(no level defined)"];
 };
 const maxStage = ex => ladderOf(ex).length;
-const exercisesOf = pattern => PLAN.filter(e => e.pattern === pattern);
+
+// ---- Plans and sessions (the plan can change from week to week; a new week inherits the previous week's plan)
+function planOf(week) {
+  for (let w = week; w >= 1; w--) if (state.plans[w]) return state.plans[w];
+  return "pushpull";
+}
+const sessionsFor = plan => plan === "fullbody"
+  ? Array.from({ length: Math.min(5, Math.max(2, state.fbDays)) }, (_, i) => ({ name: `Full Body ${i + 1}`, pattern: "Full", defaultActivity: A_NONE }))
+  : S_PUSHPULL;
+const sessionsOfWeek = w => sessionsFor(planOf(w));
 
 // read without creating an entry
 function peek(week, si) {
-  const s = SESSIONS[si];
+  const s = sessionsOfWeek(week)[si];
   const d = state.weeks[week]?.[s.name];
-  if (!d) return { mode: s.defaultMode, reps: {}, jjNext: s.defaultJjNext };
-  return { ...d, jjNext: d.jjNext ?? s.defaultJjNext };
+  return { reps: d?.reps ?? {}, activity: d?.activity ?? s.defaultActivity, stretch: !!d?.stretch };
 }
 // write (creates the entry)
 function ensure(week, si) {
-  const s = SESSIONS[si];
-  const w = (state.weeks[week] ||= {});
-  return (w[s.name] ||= { mode: s.defaultMode, reps: {}, jjNext: s.defaultJjNext });
+  const s = sessionsOfWeek(week)[si];
+  return ((state.weeks[week] ||= {})[s.name] ||= { reps: {} });
 }
 
-// leg and core exercises are skipped on a Pull day when Jiu-Jitsu is the next day
-const isSkipped = (ex, data) => ex.skipIfJjNext && data.jjNext === true;
+// An activity (e.g. Jiu-Jitsu) skips the exercises of the muscle groups it trains, today and the day before
+const isSkipped = (ex, data) => data.activity !== A_NONE && state.activity.groups.includes(ex.group);
 
-// ============================================================ Logic (same rules as the spreadsheet)
+// ============================================================ Logic
+const filledReps = (ex, data) => (data.reps[ex.name] || []).slice(0, 6).map(v => (v === "" || v == null ? NaN : Number(v)));
+
 function statusOf(ex, data) {
-  if (data.mode === MODE_JJ) return ST_JJ;
   if (isSkipped(ex, data)) return "";
   const n = setsOf(ex);
-  const reps = (data.reps[ex.name] || []).slice(0, n)
-    .filter(v => v !== "" && v != null).map(Number).filter(v => !Number.isNaN(v));
+  const reps = filledReps(ex, data).slice(0, n).filter(v => !Number.isNaN(v));
   if (!reps.length) return "";
   if (reps.length < n) return ST_OPEN;
   const low = Math.min(...reps);
@@ -330,128 +388,247 @@ function statusOf(ex, data) {
   return ST_CHECK;
 }
 
-// Start level plus one step for every earlier session of this pattern with status "Level up"
-function stageFor(ex, week, si) {
-  const o = (week - 1) * 2 + (si >= 2 ? 1 : 0);
-  let stage = startOf(ex);
-  for (let j = 0; j < o; j++) {
-    const w = Math.floor(j / 2) + 1;
-    const s = ex.pattern === "Pull" ? (j % 2 === 0 ? 0 : 2) : (j % 2 === 0 ? 1 : 3);
-    if (statusOf(ex, peek(w, s)) === ST_UP) stage = Math.min(maxStage(ex), stage + 1);
+const maxWeek = () => Math.max(state.week, 1, ...Object.keys(state.weeks).map(Number));
+
+// Chronological history of one exercise across all weeks (and plans) with the level of every session.
+// Level rule: start level, plus one step after every session with status "Level up", plus manual jumps.
+function timeline(ex) {
+  const jumps = new Set(state.jumps[ex.name] || []);
+  const top = maxStage(ex);
+  let stage = Math.min(Math.max(startOf(ex), 1), top);
+  const out = [];
+  for (let w = 1; w <= maxWeek(); w++) {
+    sessionsOfWeek(w).forEach((sess, s) => {
+      if (!PATTERNS[sess.pattern].some(([name]) => name === ex.name)) return;
+      if (jumps.has(`${w}:${s}`)) stage = Math.min(top, stage + 1);
+      const data = peek(w, s);
+      const skipped = isSkipped(ex, data);
+      const reps = skipped ? [] : filledReps(ex, data);
+      const e = { w, s, stage, data, skipped, reps, status: statusOf(ex, data),
+                  logged: reps.some(v => !Number.isNaN(v)) };
+      out.push(e);
+      if (e.status === ST_UP) stage = Math.min(top, stage + 1);
+    });
   }
-  return Math.min(Math.max(stage, 1), maxStage(ex));
+  return out;
+}
+const indexIn = (tl, week, si) => tl.findIndex(e => e.w === week && e.s === si);
+
+const mean = arr => { const v = arr.filter(x => !Number.isNaN(x)); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0; };
+
+// Progressive-overload coach (rule based, works offline). Strategies: more reps, bigger steps when stuck,
+// harder variation at the low end of the rep range (intensity), more sets (volume).
+function coach(ex, tl, idx) {
+  const cur = tl[idx];
+  const logged = tl.slice(0, idx).filter(e => e.logged);
+  if (!cur || !logged.length) return null;
+  const last = logged[logged.length - 1];
+  const n = setsOf(ex), min = minOf(ex), max = maxOf(ex), top = maxStage(ex);
+  const step = ex.unit.startsWith("sec") ? 2 : 1;
+  const unit = ex.unit;
+
+  if (last.stage < cur.stage) {
+    return { kind: "levelup", values: Array(n).fill(min), sets: n,
+      text: `Level up: aim for ${min}+ ${unit} on every set`,
+      why: `You reached ${max} on every set, so the exercise gets harder. Start at the low end of the range.` };
+  }
+  if (last.stage > cur.stage) return null;
+
+  // sessions at the same level, newest last
+  const run = [];
+  for (let i = logged.length - 1; i >= 0 && logged[i].stage === cur.stage; i--) run.unshift(logged[i]);
+  let stall = 0;
+  for (let i = run.length - 1; i >= 1; i--) {
+    if (mean(run[i].reps) <= mean(run[i - 1].reps)) stall++; else break;
+  }
+  const lastNums = last.reps.slice(0, n);
+  const fallback = lastNums.filter(v => !Number.isNaN(v)).slice(-1)[0] ?? min;
+  const base = Array.from({ length: n }, (_, i) => (Number.isNaN(lastNums[i]) || lastNums[i] == null ? fallback : lastNums[i]));
+  const lift = k => base.map(v => Math.min(max, Math.max(min, v + k * step)));
+  const lowest = Math.min(...base);
+
+  if (lowest < min) {
+    return { kind: "base", values: lift(1), sets: n,
+      text: `Build the base: ${lift(1).join(" / ")} ${unit}`,
+      why: `Your weakest set was below ${min}. Reach ${min}+ on every set before progressing.` };
+  }
+  if (stall >= 3) {
+    if (cur.stage < top) {
+      return { kind: "plateau", values: Array(n).fill(min), sets: n, jump: true,
+        text: `Plateau: try the next level, ${min}+ ${unit} per set`,
+        why: `No progress for ${stall} sessions. Vary the intensity: ${ladderOf(ex)[cur.stage]} at the low end of the range. Or add one set (${n + 1} sets).` };
+    }
+    return { kind: "plateau", values: lift(1), sets: Math.min(6, n + 1),
+      text: `Plateau at the top level: add a set (${Math.min(6, n + 1)} sets), ${lift(1).join(" / ")} ${unit}`,
+      why: `No progress for ${stall} sessions. More volume or a different rep range (change the range in Settings).` };
+  }
+  if (stall === 2) {
+    return { kind: "push", values: lift(2), sets: n,
+      text: `Step up: ${lift(2).join(" / ")} ${unit}`,
+      why: `Same result for 2 sessions. Take a bigger step: +${2 * step} per set.` };
+  }
+  const allMax = base.every(v => v >= max);
+  return { kind: "reps", values: lift(1), sets: n,
+    text: allMax ? `Hold ${max} ${unit} on every set` : `Target: ${lift(1).join(" / ")} ${unit}`,
+    why: `Beat last time: +${step} on every set until all sets reach ${max}.` };
 }
 
-// Most recent earlier session of the same pattern (Push or Pull) in which this exercise was logged.
-// Jiu-Jitsu sessions and sessions without entries for this exercise are skipped.
-function lastEntry(ex, week, si) {
-  const o = (week - 1) * 2 + (si >= 2 ? 1 : 0);
-  for (let j = o - 1; j >= 0; j--) {
-    const w = Math.floor(j / 2) + 1;
-    const s = ex.pattern === "Pull" ? (j % 2 === 0 ? 0 : 2) : (j % 2 === 0 ? 1 : 3);
-    const d = peek(w, s);
-    if (d.mode === MODE_JJ || isSkipped(ex, d)) continue;
-    const raw = (d.reps[ex.name] || []).slice(0, 6);
-    let last = -1;
-    raw.forEach((v, i) => { if (v !== "" && v != null) last = i; });
-    if (last >= 0) return { week: w, name: SESSIONS[s].name, reps: raw.slice(0, last + 1), stage: stageFor(ex, w, s) };
+const hasData = w => Object.values(state.weeks[w] || {}).some(d => Object.values(d.reps || {}).some(a => a.some(v => v !== "" && v != null)));
+
+// ============================================================ CSV rows (block, year)
+const CSV_HEAD = ["Block", "Block No.", "Plan", "Week", "Session", "Exercise", "Level", "Variant", "Sets",
+  "Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6", "Total",
+  "Optimum Set 1", "Optimum Set 2", "Optimum Set 3", "Optimum Set 4", "Optimum Set 5", "Optimum Set 6", "Optimum Total",
+  "Delta vs Optimum", "Weakest Set", "Status", "Coach"];
+
+function csvRows(from, to) {
+  const rows = [];
+  for (const ex of EXERCISES) {
+    const tl = timeline(ex);
+    tl.forEach((e, idx) => {
+      if (e.w < from || e.w > to || !e.logged) return;
+      const sess = sessionsOfWeek(e.w)[e.s];
+      const cells = Array.from({ length: 6 }, (_, i) => (Number.isNaN(e.reps[i]) || e.reps[i] == null ? "" : e.reps[i]));
+      const filled = cells.filter(v => v !== "");
+      const total = filled.reduce((a, b) => a + b, 0);
+      const c = coach(ex, tl, idx);
+      const opt = Array.from({ length: 6 }, (_, i) => (c && i < c.values.length ? c.values[i] : ""));
+      const optTotal = c ? c.values.reduce((a, b) => a + b, 0) : "";
+      rows.push({ w: e.w, s: e.s, o: EXERCISES.indexOf(ex), row: [
+        state.block, Math.ceil(e.w / 10), PLAN_LABEL[planOf(e.w)], e.w, sess.name, ex.name, e.stage, ladderOf(ex)[e.stage - 1], setsOf(ex),
+        ...cells, total, ...opt, optTotal, c ? total - optTotal : "", Math.min(...filled), e.status, c ? c.kind : ""] });
+    });
   }
-  return null;
+  // sessions replaced by the activity (only in weeks that have entries)
+  for (let w = from; w <= Math.min(to, maxWeek()); w++) {
+    if (!hasData(w)) continue;
+    sessionsOfWeek(w).forEach((sess, s) => {
+      if (peek(w, s).activity !== A_TODAY) return;
+      const row = Array(CSV_HEAD.length).fill("");
+      row[0] = state.block; row[1] = Math.ceil(w / 10); row[2] = PLAN_LABEL[planOf(w)]; row[3] = w; row[4] = sess.name;
+      row[5] = state.activity.name; row[CSV_HEAD.indexOf("Status")] = "Activity today";
+      rows.push({ w, s, o: -1, row });
+    });
+  }
+  rows.sort((a, b) => a.w - b.w || a.s - b.s || a.o - b.o);
+  return [CSV_HEAD, ...rows.map(r => r.row)];
 }
 
-const hasData = w => SESSIONS.some((s, si) => Object.values(peek(w, si).reps).some(a => a.some(v => v !== "" && v != null)));
+const blockOf = w => Math.ceil(w / 10);
+const yearOf = w => Math.ceil(w / 52);
 
-// ============================================================ Log view
+// ============================================================ UI
 const $ = id => document.getElementById(id);
 const CLS = { [ST_UP]: "up", [ST_ADD]: "mid", [ST_CHECK]: "low" };
+const actLabel = v => v === A_TODAY ? `${state.activity.name} today` : v === A_NEXT ? `${state.activity.name} tomorrow` : `No ${state.activity.name}`;
+const groupsText = () => state.activity.groups.join(", ") || "no groups";
 
 function render() {
-  $("weekLabel").textContent = "Week " + state.week;
+  const S = sessionsOfWeek(state.week);
+  if (state.session >= S.length) state.session = 0;
+  $("weekLabel").textContent = `Week ${state.week} · ${PLAN_LABEL[planOf(state.week)]}`;
+  const b = blockOf(state.week), y = yearOf(state.week);
+  $("exportBlock").textContent = `Export 10-week block ${b} (weeks ${(b - 1) * 10 + 1}–${b * 10})`;
+  $("exportYear").textContent = `Export year ${y} (weeks ${(y - 1) * 52 + 1}–${y * 52})`;
+
   $("tabs").innerHTML = "";
-  SESSIONS.forEach((s, si) => {
-    const b = document.createElement("button");
-    b.textContent = s.name;
-    b.setAttribute("role", "tab");
-    b.setAttribute("aria-selected", String(si === state.session));
-    if (peek(state.week, si).mode === MODE_JJ) b.classList.add("jj");
-    b.onclick = () => { state.session = si; save(); render(); };
-    $("tabs").append(b);
+  $("tabs").style.gridTemplateColumns = `repeat(${S.length}, 1fr)`;
+  S.forEach((s, si) => {
+    const btn = document.createElement("button");
+    btn.textContent = s.name.replace("Full Body ", "FB ");
+    btn.setAttribute("role", "tab");
+    btn.setAttribute("aria-selected", String(si === state.session));
+    const d = peek(state.week, si);
+    if (d.activity === A_TODAY && slots(s.pattern).every(x => isSkipped(x.ex, d))) btn.classList.add("jj");
+    btn.onclick = () => { state.session = si; save(); render(); };
+    $("tabs").append(btn);
   });
 
-  const si = state.session, s = SESSIONS[si], data = peek(state.week, si);
+  const si = state.session, sess = S[si], data = peek(state.week, si);
   const panel = $("panel");
   panel.innerHTML = "";
 
-  if (s.pattern === "Push") {
-    const sel = document.createElement("select");
-    sel.className = "mode";
-    sel.setAttribute("aria-label", s.name + ": Training or Jiu-Jitsu");
-    [MODE_TRAIN, MODE_JJ].forEach(m => sel.add(new Option(m, m)));
-    sel.value = data.mode;
-    sel.onchange = () => { ensure(state.week, si).mode = sel.value; save(); render(); };
-    panel.append(sel);
-    if (data.mode === MODE_JJ) {
-      const p = document.createElement("p");
-      p.className = "note";
-      p.textContent = "Jiu-Jitsu replaces this session. Levels stay unchanged. Choose Training to log sets.";
-      panel.append(p);
-      return;
-    }
+  // activity: none / today / tomorrow
+  const sel = document.createElement("select");
+  sel.className = "mode";
+  sel.setAttribute("aria-label", `${sess.name}: ${state.activity.name} today or tomorrow?`);
+  [A_NONE, A_TODAY, A_NEXT].forEach(v => sel.add(new Option(actLabel(v), v)));
+  sel.value = data.activity;
+  sel.onchange = () => { ensure(state.week, si).activity = sel.value; save(); render(); };
+  panel.append(sel);
+
+  const shown = slots(sess.pattern).filter(x => !isSkipped(x.ex, data));
+  if (data.activity !== A_NONE) {
+    const p = document.createElement("p");
+    p.className = "note";
+    p.textContent = !shown.length
+      ? `${state.activity.name} replaces this session. Levels stay unchanged.`
+      : `${state.activity.name} trains ${groupsText()}, so those exercises are skipped ${data.activity === A_TODAY ? "today" : "today (activity tomorrow)"}.`;
+    panel.append(p);
   }
 
-  if (s.pattern === "Pull") {
-    const sel = document.createElement("select");
-    sel.className = "mode";
-    sel.setAttribute("aria-label", s.name + ": is Jiu-Jitsu the next day?");
-    [NEXT_NORMAL, NEXT_JJ].forEach(m => sel.add(new Option(m, m)));
-    sel.value = data.jjNext ? NEXT_JJ : NEXT_NORMAL;
-    sel.onchange = () => { ensure(state.week, si).jjNext = sel.value === NEXT_JJ; save(); render(); };
-    panel.append(sel);
-    if (data.jjNext) {
-      const p = document.createElement("p");
-      p.className = "note";
-      p.textContent = "Jiu-Jitsu trains legs and core tomorrow, so the glute bridge / Nordic curl and the core exercise are skipped today.";
-      panel.append(p);
-    }
-  }
-
-  exercisesOf(s.pattern).filter(ex => !isSkipped(ex, data)).forEach(ex => {
+  shown.forEach(({ ex, ss }) => {
+    const tl = timeline(ex);
+    const idx = indexIn(tl, state.week, si);
+    const cur = tl[idx];
     const ladder = ladderOf(ex);
-    const stage = stageFor(ex, state.week, si);
+    const stage = cur.stage;
+    const lastE = tl.slice(0, idx).filter(e => e.logged).pop();
+    const c = coach(ex, tl, idx);
+
     const card = document.createElement("section");
     card.className = "card";
 
     const h = document.createElement("h2");
     const t = document.createElement("span"); t.textContent = ex.name;
     const u = document.createElement("span"); u.className = "variant";
-    u.textContent = `${setsOf(ex)} × ${minOf(ex)}–${maxOf(ex)} ${ex.unit}`;
+    u.textContent = `${ss ? "Superset " + ss + " · " : ""}${setsOf(ex)} × ${minOf(ex)}–${maxOf(ex)} ${ex.unit}`;
     h.append(t, u);
 
     const v = document.createElement("p");
     v.className = "variant";
     v.textContent = `Level ${stage} of ${ladder.length}: ${ladder[stage - 1]}`;
+    card.append(h, v);
 
-    const prev = lastEntry(ex, state.week, si);
-    let lastLine = null;
-    if (prev) {
-      lastLine = document.createElement("p");
-      lastLine.className = "last";
-      const vals = prev.reps.map(x => (x === "" || x == null ? "–" : x)).join(" / ");
-      const where = `Wk ${prev.week} · ${prev.name}`;
-      lastLine.textContent = prev.stage === stage
-        ? `Last time (${where}): ${vals} ${ex.unit}`
-        : `Last time (${where}, level ${prev.stage}: ${ladderOf(ex)[prev.stage - 1]}): ${vals} ${ex.unit}`;
+    if (lastE) {
+      const l = document.createElement("p");
+      l.className = "last";
+      const vals = lastE.reps.map(x => (Number.isNaN(x) ? "–" : x));
+      while (vals.length && vals[vals.length - 1] === "–") vals.pop();
+      const where = `Wk ${lastE.w} · ${sessionsOfWeek(lastE.w)[lastE.s].name}`;
+      l.textContent = lastE.stage === stage
+        ? `Last time (${where}): ${vals.join(" / ")} ${ex.unit}`
+        : `Last time (${where}, level ${lastE.stage}: ${ladder[lastE.stage - 1]}): ${vals.join(" / ")} ${ex.unit}`;
+      card.append(l);
+    }
+    if (c) {
+      const tg = document.createElement("p"); tg.className = "target"; tg.textContent = c.text;
+      const why = document.createElement("p"); why.className = "why"; why.textContent = c.why;
+      card.append(tg, why);
+      if (c.jump && stage < maxStage(ex)) {
+        const btn = document.createElement("button");
+        btn.className = "small"; btn.textContent = "Take the next level now";
+        btn.onclick = () => { (state.jumps[ex.name] ||= []).push(`${state.week}:${si}`); save(); render(); };
+        card.append(btn);
+      }
+    }
+    if ((state.jumps[ex.name] || []).includes(`${state.week}:${si}`)) {
+      const btn = document.createElement("button");
+      btn.className = "small"; btn.textContent = "Undo level jump";
+      btn.onclick = () => { state.jumps[ex.name] = state.jumps[ex.name].filter(k => k !== `${state.week}:${si}`); save(); render(); };
+      card.append(btn);
     }
 
     const row = document.createElement("div");
     row.className = "row";
+    row.style.marginTop = "10px";
     const lab = document.createElement("label"); lab.textContent = "Sets";
-    const sel = document.createElement("select");
-    sel.setAttribute("aria-label", "Number of sets " + ex.name);
-    [2, 3, 4, 5, 6].forEach(n => sel.add(new Option(n, n)));
-    sel.value = setsOf(ex);
-    sel.onchange = () => { setCfg(ex, "sets", Number(sel.value)); render(); };
-    row.append(lab, sel);
+    const setSel = document.createElement("select");
+    setSel.setAttribute("aria-label", "Number of sets " + ex.name);
+    [2, 3, 4, 5, 6].forEach(n => setSel.add(new Option(n, n)));
+    setSel.value = setsOf(ex);
+    setSel.onchange = () => { setCfg(ex, "sets", Number(setSel.value)); render(); };
+    row.append(lab, setSel);
 
     const grid = document.createElement("div");
     grid.className = "sets";
@@ -459,8 +636,7 @@ function render() {
     for (let i = 0; i < 6; i++) {
       const inp = document.createElement("input");
       inp.type = "number"; inp.inputMode = "numeric"; inp.min = 0;
-      const lastVal = prev && prev.stage === stage ? prev.reps[i] : null;   // grey hint: same level as last time
-      inp.placeholder = lastVal !== "" && lastVal != null ? String(lastVal) : "Set " + (i + 1);
+      inp.placeholder = c && c.values[i] != null ? String(c.values[i]) : "Set " + (i + 1);
       inp.setAttribute("aria-label", `${ex.name} set ${i + 1}`);
       inp.value = (data.reps[ex.name] || [])[i] ?? "";
       inp.disabled = i >= setsOf(ex);
@@ -472,13 +648,28 @@ function render() {
       };
       grid.append(inp);
     }
-    const status = statusOf(ex, data);
-    st.className = "status " + (CLS[status] || "");
-    st.textContent = status;
-
-    card.append(h, v, ...(lastLine ? [lastLine] : []), row, grid, st);
+    st.className = "status " + (CLS[cur.status] || "");
+    st.textContent = cur.status;
+    card.append(row, grid, st);
     panel.append(card);
   });
+
+  if (sess.pattern === "Full") {
+    const card = document.createElement("section");
+    card.className = "card";
+    const h = document.createElement("h2"); h.textContent = "Stretching";
+    const p = document.createElement("p");
+    p.className = "variant";
+    p.textContent = "2 × 30 s forward fold · 30 s frog stretch · 2 × 30–60 s wall split / middle split";
+    const lab = document.createElement("label");
+    lab.className = "row";
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = data.stretch; cb.style.minHeight = "0"; cb.style.width = "20px";
+    cb.onchange = () => { ensure(state.week, si).stretch = cb.checked; save(); };
+    lab.append(cb, document.createTextNode("Done"));
+    card.append(h, p, lab);
+    panel.append(card);
+  }
 }
 
 // update only the status line, so the keyboard stays open while typing
@@ -524,8 +715,8 @@ function buildEditor(ex, body) {
   const draw = () => {
     list.innerHTML = "";
     const arr = state.ladders[ex.name] ?? DEFAULT_LADDERS[ex.name];
-    const slots = Math.max(20, arr.length);
-    for (let i = 0; i < slots; i++) {
+    const slotsN = Math.max(20, arr.length);
+    for (let i = 0; i < slotsN; i++) {
       const row = document.createElement("div");
       row.className = "step";
       const n = document.createElement("span"); n.textContent = i + 1;
@@ -566,15 +757,40 @@ function buildEditor(ex, body) {
 
 function renderSettings() {
   $("block").value = state.block;
-  const box = $("exList");
+
+  $("planTitle").textContent = `Training plan from week ${state.week} on`;
+  const plan = $("plan");
+  plan.innerHTML = "";
+  Object.entries(PLAN_LABEL).forEach(([v, l]) => plan.add(new Option(l, v)));
+  plan.value = planOf(state.week);
+  $("fbDays").value = state.fbDays;
+
+  $("actName").value = state.activity.name;
+  const box = $("actGroups");
   box.innerHTML = "";
-  PLAN.forEach(ex => {
+  GROUPS.forEach(g => {
+    const l = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = state.activity.groups.includes(g);
+    cb.onchange = () => {
+      const set = new Set(state.activity.groups);
+      cb.checked ? set.add(g) : set.delete(g);
+      state.activity.groups = GROUPS.filter(x => set.has(x));
+      save();
+    };
+    l.append(cb, document.createTextNode(g));
+    box.append(l);
+  });
+
+  const list = $("exList");
+  list.innerHTML = "";
+  EXERCISES.forEach(ex => {
     const d = document.createElement("details");
-    const s = document.createElement("summary"); s.textContent = `${ex.pattern}: ${ex.name}`;
+    const s = document.createElement("summary"); s.textContent = `${ex.group}: ${ex.name}`;
     const body = document.createElement("div"); body.className = "body";
     d.append(s, body);
     d.addEventListener("toggle", () => { if (d.open && !d.dataset.built) { d.dataset.built = "1"; buildEditor(ex, body); } });
-    box.append(d);
+    list.append(d);
   });
 }
 
@@ -594,30 +810,7 @@ function download(name, text, type) {
   document.body.append(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-
-function csvRows() {
-  const rows = [["Block", "Week", "Session", "Exercise", "Level", "Variant", "Sets", "Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6", "Weakest Set", "Total", "Status"]];
-  const weeks = Object.keys(state.weeks).map(Number).sort((a, b) => a - b);
-  for (const w of weeks) {
-    SESSIONS.forEach((s, si) => {
-      const data = peek(w, si);
-      exercisesOf(s.pattern).forEach(ex => {
-        if (isSkipped(ex, data)) return;
-        const raw = data.reps[ex.name] || [];
-        const nums = raw.slice(0, 6).map(v => (v === "" || v == null ? "" : Number(v)));
-        const filled = nums.filter(v => v !== "");
-        const status = statusOf(ex, data);
-        const jj = status === ST_JJ && hasData(w);
-        if (!filled.length && !jj) return;
-        const stage = stageFor(ex, w, si);
-        const cells = Array.from({ length: 6 }, (_, i) => nums[i] ?? "");
-        rows.push([state.block, w, s.name, ex.name, stage, ladderOf(ex)[stage - 1], setsOf(ex), ...cells,
-          filled.length ? Math.min(...filled) : "", filled.reduce((a, b) => a + b, 0), status]);
-      });
-    });
-  }
-  return rows;
-}
+const toCsv = rows => "\ufeff" + rows.map(r => r.map(esc).join(";")).join("\n");
 
 // ============================================================ Events
 $("prev").onclick = () => { state.week = Math.max(1, state.week - 1); save(); render(); };
@@ -625,9 +818,21 @@ $("next").onclick = () => { state.week += 1; save(); render(); };
 $("settingsBtn").onclick = () => show("settings");
 $("back").onclick = () => show("log");
 $("block").onchange = () => { state.block = $("block").value.trim() || "Block 1"; save(); };
+$("plan").onchange = () => { state.plans[state.week] = $("plan").value; state.session = 0; save(); };
+$("fbDays").onchange = () => {
+  state.fbDays = Math.min(5, Math.max(2, Number($("fbDays").value) || 3));
+  $("fbDays").value = state.fbDays; save();
+};
+$("actName").onchange = () => { state.activity.name = $("actName").value.trim() || "Activity"; save(); };
 
-$("exportCsv").onclick = () =>
-  download("progression.csv", "\ufeff" + csvRows().map(r => r.map(esc).join(";")).join("\n"), "text/csv");
+$("exportBlock").onclick = () => {
+  const b = blockOf(state.week);
+  download(`progression-block-${b}.csv`, toCsv(csvRows((b - 1) * 10 + 1, b * 10)), "text/csv");
+};
+$("exportYear").onclick = () => {
+  const y = yearOf(state.week);
+  download(`progression-year-${y}.csv`, toCsv(csvRows((y - 1) * 52 + 1, y * 52)), "text/csv");
+};
 $("exportJson").onclick = () =>
   download("progression-backup.json", JSON.stringify(state, null, 2), "application/json");
 $("importJson").onclick = () => $("file").click();
