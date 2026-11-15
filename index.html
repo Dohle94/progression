@@ -44,6 +44,7 @@
   .sets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
   .sets input { width: 100%; text-align: center; }
   .sets input:disabled { opacity: .35; }
+  .last { color: var(--muted); font-size: .85rem; margin: -4px 0 10px; }
   .status { margin: 10px 0 0; font-weight: 600; min-height: 1.4em; }
   .up { color: var(--ok); } .mid, .low { color: var(--warn); }
   .mode { width: 100%; margin-bottom: 12px; }
@@ -196,16 +197,16 @@ const DEFAULT_LADDERS = {
 
 // pattern, sets, min reps, max reps, unit, start level (estimate, adjust in Settings)
 const PLAN = [
-  ["Push", "Planche Push-up Progression", 4, 3, 8, "reps", 5],
-  ["Push", "Pike / Handstand Push-up Progression", 4, 3, 8, "reps", 4],
-  ["Push", "Dips", 4, 3, 8, "reps", 7],
-  ["Push", "Pistol Squat", 4, 3, 8, "reps per side", 4],
+  ["Push", "Planche Push-up Progression", 4, 5, 10, "reps", 5],
+  ["Push", "Pike / Handstand Push-up Progression", 4, 5, 10, "reps", 4],
+  ["Push", "Dips", 4, 5, 10, "reps", 7],
+  ["Push", "Pistol Squat", 4, 5, 10, "reps per side", 4],
   ["Push", "Core 1 Push (Ab Wheel)", 3, 8, 12, "reps", 4],
   ["Push", "Core 2 Push (Dead Bug)", 3, 8, 12, "reps", 2],
   ["Pull", "Front Lever", 5, 6, 10, "sec", 6],
-  ["Pull", "Pull-up", 4, 3, 8, "reps", 7],
-  ["Pull", "Row / FL Pull-up", 4, 3, 8, "reps", 2],
-  ["Pull", "Hip Raise", 4, 3, 8, "reps per side", 4],
+  ["Pull", "Pull-up", 4, 5, 10, "reps", 7],
+  ["Pull", "Row / FL Pull-up", 4, 5, 10, "reps", 2],
+  ["Pull", "Hip Raise", 4, 5, 10, "reps per side", 4],
   ["Pull", "Core 1 Pull (Lying Leg Raise)", 3, 8, 12, "reps", 3],
   ["Pull", "Core 2 Pull (Side Plank)", 3, 8, 12, "reps", 2]
 ].map(([pattern, name, sets, min, max, unit, start]) => ({ pattern, name, sets, min, max, unit, start }));
@@ -342,6 +343,23 @@ function stageFor(ex, week, si) {
   return Math.min(Math.max(stage, 1), maxStage(ex));
 }
 
+// Most recent earlier session of the same pattern (Push or Pull) in which this exercise was logged.
+// Jiu-Jitsu sessions and sessions without entries for this exercise are skipped.
+function lastEntry(ex, week, si) {
+  const o = (week - 1) * 2 + (si >= 2 ? 1 : 0);
+  for (let j = o - 1; j >= 0; j--) {
+    const w = Math.floor(j / 2) + 1;
+    const s = ex.pattern === "Pull" ? (j % 2 === 0 ? 0 : 2) : (j % 2 === 0 ? 1 : 3);
+    const d = peek(w, s);
+    if (d.mode === MODE_JJ) continue;
+    const raw = (d.reps[ex.name] || []).slice(0, 6);
+    let last = -1;
+    raw.forEach((v, i) => { if (v !== "" && v != null) last = i; });
+    if (last >= 0) return { week: w, name: SESSIONS[s].name, reps: raw.slice(0, last + 1), stage: stageFor(ex, w, s) };
+  }
+  return null;
+}
+
 const hasData = w => SESSIONS.some((s, si) => Object.values(peek(w, si).reps).some(a => a.some(v => v !== "" && v != null)));
 
 // ============================================================ Log view
@@ -398,6 +416,18 @@ function render() {
     v.className = "variant";
     v.textContent = `Level ${stage} of ${ladder.length}: ${ladder[stage - 1]}`;
 
+    const prev = lastEntry(ex, state.week, si);
+    let lastLine = null;
+    if (prev) {
+      lastLine = document.createElement("p");
+      lastLine.className = "last";
+      const vals = prev.reps.map(x => (x === "" || x == null ? "–" : x)).join(" / ");
+      const where = `Wk ${prev.week} · ${prev.name}`;
+      lastLine.textContent = prev.stage === stage
+        ? `Last time (${where}): ${vals} ${ex.unit}`
+        : `Last time (${where}, level ${prev.stage}: ${ladderOf(ex)[prev.stage - 1]}): ${vals} ${ex.unit}`;
+    }
+
     const row = document.createElement("div");
     row.className = "row";
     const lab = document.createElement("label"); lab.textContent = "Sets";
@@ -414,7 +444,8 @@ function render() {
     for (let i = 0; i < 6; i++) {
       const inp = document.createElement("input");
       inp.type = "number"; inp.inputMode = "numeric"; inp.min = 0;
-      inp.placeholder = "Set " + (i + 1);
+      const lastVal = prev && prev.stage === stage ? prev.reps[i] : null;   // grey hint: same level as last time
+      inp.placeholder = lastVal !== "" && lastVal != null ? String(lastVal) : "Set " + (i + 1);
       inp.setAttribute("aria-label", `${ex.name} set ${i + 1}`);
       inp.value = (data.reps[ex.name] || [])[i] ?? "";
       inp.disabled = i >= setsOf(ex);
@@ -430,7 +461,7 @@ function render() {
     st.className = "status " + (CLS[status] || "");
     st.textContent = status;
 
-    card.append(h, v, row, grid, st);
+    card.append(h, v, ...(lastLine ? [lastLine] : []), row, grid, st);
     panel.append(card);
   });
 }
