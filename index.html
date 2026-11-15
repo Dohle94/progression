@@ -31,10 +31,13 @@
   .weekbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
   .weekbar button { flex: 0 0 44px; }
   .weekbar strong { flex: 1; text-align: center; }
-  .tabs { display: grid; gap: 6px; margin-bottom: 14px; }
-  .tabs button { padding: 8px 2px; font-size: .9rem; }
-  .tabs button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .tabs button.jj { opacity: .55; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 14px; }
+  .days button { padding: 6px 0; font-size: .78rem; line-height: 1.25; white-space: pre-line; min-height: 58px; }
+  .days button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .days button.today { border-color: var(--accent); border-width: 2px; }
+  .range { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .range input { width: 100%; }
+  .dayhead { font-size: 1rem; font-weight: 600; margin: 0 0 10px; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
           padding: 14px; margin-bottom: 12px; }
   .card h2 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
@@ -88,17 +91,22 @@
       <strong id="weekLabel"></strong>
       <button id="next" aria-label="Next week">›</button>
     </div>
-    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="days" id="days" role="tablist"></div>
+    <button id="todayBtn" class="small" style="margin-bottom:12px">Jump to today</button>
     <div id="panel"></div>
 
+    <h3>Export</h3>
+    <div class="range">
+      <input type="date" id="from" aria-label="Export from date">
+      <input type="date" id="to" aria-label="Export to date">
+    </div>
     <div class="actions">
-      <button id="exportBlock" class="primary"></button>
-      <button id="exportYear" class="primary"></button>
+      <button id="exportCsv" class="primary">Export CSV</button>
       <button id="exportJson">Save backup (JSON)</button>
       <button id="importJson">Restore backup</button>
       <input type="file" id="file" accept="application/json,.json" hidden>
     </div>
-    <p class="note">CSV files contain your results next to the optimum progressive-overload target for every session. Your data is stored only in this browser on this device. Save a backup regularly. It includes your settings and ladders.</p>
+    <p class="note">Leave the dates empty to export everything. Every row has the date, calendar week and focus, your sets and the optimum progressive-overload target. Your data is stored only in this browser on this device. Save a backup regularly. It includes your settings and ladders.</p>
   </div>
 
   <!-- ======================= Settings ======================= -->
@@ -108,20 +116,11 @@
       <h1>Settings</h1>
     </div>
 
-    <h3 id="planTitle"></h3>
-    <select id="plan" class="field" aria-label="Training plan for this week"></select>
-    <label class="note" for="fbDays">Full Body sessions per week</label>
-    <input type="number" id="fbDays" min="2" max="5" class="field">
-
     <h3>Hobby / activity</h3>
     <label class="note" for="actName">Name</label>
     <input type="text" id="actName" class="field">
-    <p class="note">The activity trains these muscle groups. Exercises of the selected groups are skipped on the day before and on the day of the activity (set per session in the log).</p>
+    <p class="note">The activity trains these muscle groups. Exercises of the selected groups are skipped on the day before and on the day of the activity (set per day in the log).</p>
     <div class="checks" id="actGroups"></div>
-
-    <h3>Block</h3>
-    <label class="note" for="block">Block name (used in the CSV)</label>
-    <input type="text" id="block" class="field">
 
     <h3>Exercises</h3>
     <p class="note">Band 5 = strongest assistance, Band 1 = lightest. Levels run from top (easy) to bottom (hard). Empty fields are skipped, and trailing fields may stay empty. Inserting or deleting levels shifts the numbering, so check the start level afterwards.</p>
@@ -222,7 +221,7 @@ DEFAULT_LADDERS["Core 3 (Ab Compressions)"] = [
   "L-Sit Pike Compressions", "L-Sit Pike Compressions, 5 kg Vest"
 ];
 
-// ============================================================ Exercises and plans
+// ============================================================ Exercises and focus days
 const GROUPS = ["Push", "Pull", "Legs", "Core"];
 
 // name, muscle group, sets, min, max, unit, start level (estimate, adjust in Settings)
@@ -242,7 +241,8 @@ const EXERCISES = [
 ].map(([name, group, sets, min, max, unit, start]) => ({ name, group, sets, min, max, unit, start }));
 const EX = Object.fromEntries(EXERCISES.map(e => [e.name, e]));
 
-// session patterns: [exercise, superset letter]. Exercises are shared between plans, so levels carry over.
+// What a day with this focus contains: [exercise, superset letter].
+// Exercises are shared between Push, Pull and Full Body, so levels and targets follow the exercise, not the focus.
 const PATTERNS = {
   Push: [["Planche Push-up Progression"], ["Pike / Handstand Push-up Progression"], ["Dips"], ["Pistol Squat"],
          ["Core 1 Push (L-Sit)", "A"], ["Core 2 Push (Side Plank)", "A"]],
@@ -251,51 +251,62 @@ const PATTERNS = {
          ["Pistol Squat", "A"], ["Glute Bridge / Nordic Curl Progression", "A"],
          ["Core 1 Push (L-Sit)", "B"], ["Core 3 (Ab Compressions)", "B"]]
 };
-const slots = pattern => PATTERNS[pattern].map(([name, ss]) => ({ ex: EX[name], ss: ss || "" }));
+const slots = focus => (PATTERNS[focus] || []).map(([name, ss]) => ({ ex: EX[name], ss: ss || "" }));
 
-const PLAN_LABEL = { pushpull: "Push / Pull", fullbody: "Full Body" };
+const F_NONE = "none";
+const FOCUS_LABEL = { none: "Free day", Push: "Push", Pull: "Pull", Full: "Full Body" };
+const FOCUS_SHORT = { none: "", Push: "Push", Pull: "Pull", Full: "FB" };
 const A_NONE = "none", A_TODAY = "today", A_NEXT = "tomorrow";
-
-const S_PUSHPULL = [
-  { name: "Pull 1", pattern: "Pull", defaultActivity: A_NEXT },
-  { name: "Push 1", pattern: "Push", defaultActivity: A_TODAY },
-  { name: "Pull 2", pattern: "Pull", defaultActivity: A_NONE },
-  { name: "Push 2", pattern: "Push", defaultActivity: A_NONE }
-];
 
 const ST_UP = "Level up";
 const ST_ADD = "Add reps";
 const ST_CHECK = "Check level";
 const ST_OPEN = "Incomplete";
 
+// ============================================================ Dates (local time, keys like 2026-11-16)
+const pad = n => String(n).padStart(2, "0");
+const toKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromKey = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (k, n) => { const d = fromKey(k); d.setDate(d.getDate() + n); return toKey(d); };
+const todayKey = () => toKey(new Date());
+const mondayOf = k => addDays(k, -((fromKey(k).getDay() + 6) % 7));
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const weekdayOf = k => WEEKDAYS[(fromKey(k).getDay() + 6) % 7];
+
+// ISO calendar week (Monday start, week 1 contains the first Thursday)
+function isoWeek(k) {
+  const d = fromKey(k);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 3);     // Thursday of this week
+  const year = d.getFullYear();
+  const jan4 = new Date(year, 0, 4);
+  const week = 1 + Math.round(((d - jan4) / 86400000 - 3 + ((jan4.getDay() + 6) % 7)) / 7);
+  return { year, week };
+}
+
 // ============================================================ State, storage, migration
-const KEY = "progression-v6";
-const OLD_KEYS = ["progression-v5", "progression-v4"];
+const KEY = "progression-v7";
+const OLD_KEYS = ["progression-v6", "progression-v5", "progression-v4"];
 
 const defaultActivity = () => ({ name: "Jiu-Jitsu", groups: ["Push", "Legs", "Core"] });
-const fresh = () => ({ version: 6, block: "Block 1", week: 1, session: 0, fbDays: 3, plans: {},
-                       activity: defaultActivity(), cfg: {}, ladders: {}, jumps: {}, weeks: {} });
+const fresh = () => ({ version: 7, activity: defaultActivity(), cfg: {}, ladders: {}, jumps: {}, days: {} });
 
 function readJson(key) {
   try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
 }
 
-// Versions 4 and 5 used a Training / Jiu-Jitsu mode (Push) and a "next day Jiu-Jitsu" flag (Pull).
-// Both become one "activity" setting per session. Entries, set counts, rep ranges and custom ladders are carried over.
+// ---- Versions 4 and 5 (training / Jiu-Jitsu mode per session) become the version 6 shape first
 const NAMES_V4 = { "Hip Raise": "Glute Bridge / Nordic Curl Progression" };
+const fresh6 = () => ({ version: 6, week: 1, session: 0, fbDays: 3, plans: {}, activity: defaultActivity(), cfg: {}, ladders: {}, jumps: {}, weeks: {} });
 
 function migrateLegacy(old) {
-  const s = fresh();
-  s.block = old.block || s.block;
+  const s = fresh6();
   s.week = old.week || 1;
-  s.session = old.session || 0;
   const map = n => NAMES_V4[n] || n;
   for (const [name, c] of Object.entries(old.cfg || {})) {
     const to = map(name);
     if (!EX[to]) continue;
     const next = {};
     for (const k of ["sets", "min", "max"]) if (c[k] != null) next[k] = c[k];
-    // default ladders are unchanged since version 5, so start levels carry over there
     if (c.start != null && (old.version === 5 || (old.ladders && old.ladders[name]))) next.start = c.start;
     if (Object.keys(next).length) s.cfg[to] = next;
   }
@@ -314,20 +325,73 @@ function migrateLegacy(old) {
   return s;
 }
 
+// ---- Version 6 (week and session numbers) becomes calendar days.
+// Week numbers had no real date, so the week you were viewing is placed in the current calendar week.
+// Sessions go to these weekdays: Pull 1 Mon, Push 1 Tue, Pull 2 Thu, Push 2 Sat, Full Body 1-5 Mon/Wed/Fri/Sat/Sun.
+const V6_SESSION = {
+  "Pull 1": { focus: "Pull", day: 0, act: A_NEXT }, "Push 1": { focus: "Push", day: 1, act: A_TODAY },
+  "Pull 2": { focus: "Pull", day: 3, act: A_NONE }, "Push 2": { focus: "Push", day: 5, act: A_NONE }
+};
+[0, 2, 4, 5, 6].forEach((day, i) => { V6_SESSION[`Full Body ${i + 1}`] = { focus: "Full", day, act: A_NONE }; });
+
+function migrateV6(old) {
+  const s = fresh();
+  s.activity = Object.assign(defaultActivity(), old.activity);
+  s.cfg = old.cfg || {};
+  s.ladders = old.ladders || {};
+  const anchor = mondayOf(todayKey());
+  const cur = old.week || 1;
+  const dateOf = (w, day) => addDays(anchor, (w - cur) * 7 + day);
+  const planOf = w => { for (let i = w; i >= 1; i--) if ((old.plans || {})[i]) return old.plans[i]; return "pushpull"; };
+
+  for (const [w, sess] of Object.entries(old.weeks || {})) {
+    const week = Number(w);
+    let any = false;
+    for (const [sn, d] of Object.entries(sess)) {
+      const def = V6_SESSION[sn];
+      if (!def) continue;
+      const reps = d.reps || {};
+      if (Object.values(reps).some(a => a.some(v => v !== "" && v != null))) any = true;
+      const activity = d.activity ?? def.act;
+      let focus = def.focus;
+      // a session that the activity replaced completely is a free day with sport
+      if (activity === A_TODAY && slots(focus).every(x => (old.activity?.groups || defaultActivity().groups).includes(x.ex.group))) focus = F_NONE;
+      s.days[dateOf(week, def.day)] = { focus, activity, reps };
+      if (d.stretch) s.days[dateOf(week, def.day)].stretch = true;
+    }
+    // Push 1 was a Jiu-Jitsu day by default: keep it as a sport day in weeks that have entries
+    const tue = dateOf(week, 1);
+    if (any && !s.days[tue]) s.days[tue] = { focus: F_NONE, activity: A_TODAY, reps: {} };
+  }
+  // manual level jumps: "week:sessionIndex" -> date
+  for (const [name, list] of Object.entries(old.jumps || {})) {
+    s.jumps[name] = list.map(key => {
+      const [w, si] = key.split(":").map(Number);
+      const plan = planOf(w);
+      const sn = plan === "fullbody" ? `Full Body ${si + 1}` : ["Pull 1", "Push 1", "Pull 2", "Push 2"][si];
+      const def = V6_SESSION[sn];
+      return def ? dateOf(w, def.day) : null;
+    }).filter(Boolean);
+  }
+  return s;
+}
+
 function normalize(data) {
-  if (!data || typeof data !== "object" || !data.weeks) return null;
-  if (data.version === 6) {
+  if (!data || typeof data !== "object") return null;
+  if (data.version === 7 && data.days) {
     const s = Object.assign(fresh(), data);
     s.activity = Object.assign(defaultActivity(), data.activity);
     return s;
   }
-  if (data.version === 4 || data.version === 5) return migrateLegacy(data);
+  if (data.version === 6 && data.weeks) return migrateV6(data);
+  if ((data.version === 4 || data.version === 5) && data.weeks) return migrateV6(migrateLegacy(data));
   return null;
 }
 
 let state = normalize(readJson(KEY));
 if (!state) for (const k of OLD_KEYS) { state = normalize(readJson(k)); if (state) break; }
 state = state || fresh();
+let viewDate = todayKey();
 
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage full or blocked */ }
@@ -348,26 +412,15 @@ const ladderOf = ex => {
 };
 const maxStage = ex => ladderOf(ex).length;
 
-// ---- Plans and sessions (the plan can change from week to week; a new week inherits the previous week's plan)
-function planOf(week) {
-  for (let w = week; w >= 1; w--) if (state.plans[w]) return state.plans[w];
-  return "pushpull";
-}
-const sessionsFor = plan => plan === "fullbody"
-  ? Array.from({ length: Math.min(5, Math.max(2, state.fbDays)) }, (_, i) => ({ name: `Full Body ${i + 1}`, pattern: "Full", defaultActivity: A_NONE }))
-  : S_PUSHPULL;
-const sessionsOfWeek = w => sessionsFor(planOf(w));
-
+// ---- Days
 // read without creating an entry
-function peek(week, si) {
-  const s = sessionsOfWeek(week)[si];
-  const d = state.weeks[week]?.[s.name];
-  return { reps: d?.reps ?? {}, activity: d?.activity ?? s.defaultActivity, stretch: !!d?.stretch };
+function peekDay(k) {
+  const d = state.days[k];
+  return { focus: d?.focus ?? F_NONE, activity: d?.activity ?? A_NONE, reps: d?.reps ?? {}, stretch: !!d?.stretch };
 }
 // write (creates the entry)
-function ensure(week, si) {
-  const s = sessionsOfWeek(week)[si];
-  return ((state.weeks[week] ||= {})[s.name] ||= { reps: {} });
+function ensureDay(k) {
+  return (state.days[k] ||= { focus: F_NONE, activity: A_NONE, reps: {} });
 }
 
 // An activity (e.g. Jiu-Jitsu) skips the exercises of the muscle groups it trains, today and the day before
@@ -388,31 +441,26 @@ function statusOf(ex, data) {
   return ST_CHECK;
 }
 
-const maxWeek = () => Math.max(state.week, 1, ...Object.keys(state.weeks).map(Number));
-
-// Chronological history of one exercise across all weeks (and plans) with the level of every session.
-// Level rule: start level, plus one step after every session with status "Level up", plus manual jumps.
+// Chronological history of one exercise across all days (whatever the focus was) with the level of every day.
+// Level rule: start level, plus one step after every day with status "Level up", plus manual jumps.
 function timeline(ex) {
   const jumps = new Set(state.jumps[ex.name] || []);
   const top = maxStage(ex);
   let stage = Math.min(Math.max(startOf(ex), 1), top);
   const out = [];
-  for (let w = 1; w <= maxWeek(); w++) {
-    sessionsOfWeek(w).forEach((sess, s) => {
-      if (!PATTERNS[sess.pattern].some(([name]) => name === ex.name)) return;
-      if (jumps.has(`${w}:${s}`)) stage = Math.min(top, stage + 1);
-      const data = peek(w, s);
-      const skipped = isSkipped(ex, data);
-      const reps = skipped ? [] : filledReps(ex, data);
-      const e = { w, s, stage, data, skipped, reps, status: statusOf(ex, data),
-                  logged: reps.some(v => !Number.isNaN(v)) };
-      out.push(e);
-      if (e.status === ST_UP) stage = Math.min(top, stage + 1);
-    });
+  for (const k of [...new Set([...Object.keys(state.days), viewDate])].sort()) {
+    const data = peekDay(k);
+    if (!(PATTERNS[data.focus] || []).some(([name]) => name === ex.name)) continue;
+    if (jumps.has(k)) stage = Math.min(top, stage + 1);
+    const skipped = isSkipped(ex, data);
+    const reps = skipped ? [] : filledReps(ex, data);
+    const e = { k, stage, data, skipped, reps, status: statusOf(ex, data), logged: reps.some(v => !Number.isNaN(v)) };
+    out.push(e);
+    if (e.status === ST_UP) stage = Math.min(top, stage + 1);
   }
   return out;
 }
-const indexIn = (tl, week, si) => tl.findIndex(e => e.w === week && e.s === si);
+const indexIn = (tl, k) => tl.findIndex(e => e.k === k);
 
 const mean = arr => { const v = arr.filter(x => !Number.isNaN(x)); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0; };
 
@@ -434,7 +482,7 @@ function coach(ex, tl, idx) {
   }
   if (last.stage > cur.stage) return null;
 
-  // sessions at the same level, newest last
+  // days at the same level, newest last
   const run = [];
   for (let i = logged.length - 1; i >= 0 && logged[i].stage === cur.stage; i--) run.unshift(logged[i]);
   let stall = 0;
@@ -473,103 +521,119 @@ function coach(ex, tl, idx) {
     why: `Beat last time: +${step} on every set until all sets reach ${max}.` };
 }
 
-const hasData = w => Object.values(state.weeks[w] || {}).some(d => Object.values(d.reps || {}).some(a => a.some(v => v !== "" && v != null)));
-
-// ============================================================ CSV rows (block, year)
-const CSV_HEAD = ["Block", "Block No.", "Plan", "Week", "Session", "Exercise", "Level", "Variant", "Sets",
+// ============================================================ CSV rows (any date range)
+const CSV_HEAD = ["Date", "Weekday", "Calendar Week", "Year", "Focus", "Exercise", "Group", "Level", "Variant", "Sets",
   "Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6", "Total",
   "Optimum Set 1", "Optimum Set 2", "Optimum Set 3", "Optimum Set 4", "Optimum Set 5", "Optimum Set 6", "Optimum Total",
-  "Delta vs Optimum", "Weakest Set", "Status", "Coach"];
+  "Delta vs Optimum", "Weakest Set", "Status", "Coach", "Activity"];
 
-function csvRows(from, to) {
+function csvRows(from = "0000-00-00", to = "9999-99-99") {
   const rows = [];
+  const dateCols = k => { const iso = isoWeek(k); return [k, weekdayOf(k), iso.week, iso.year]; };
   for (const ex of EXERCISES) {
     const tl = timeline(ex);
     tl.forEach((e, idx) => {
-      if (e.w < from || e.w > to || !e.logged) return;
-      const sess = sessionsOfWeek(e.w)[e.s];
+      if (e.k < from || e.k > to || !e.logged) return;
       const cells = Array.from({ length: 6 }, (_, i) => (Number.isNaN(e.reps[i]) || e.reps[i] == null ? "" : e.reps[i]));
       const filled = cells.filter(v => v !== "");
       const total = filled.reduce((a, b) => a + b, 0);
       const c = coach(ex, tl, idx);
       const opt = Array.from({ length: 6 }, (_, i) => (c && i < c.values.length ? c.values[i] : ""));
       const optTotal = c ? c.values.reduce((a, b) => a + b, 0) : "";
-      rows.push({ w: e.w, s: e.s, o: EXERCISES.indexOf(ex), row: [
-        state.block, Math.ceil(e.w / 10), PLAN_LABEL[planOf(e.w)], e.w, sess.name, ex.name, e.stage, ladderOf(ex)[e.stage - 1], setsOf(ex),
-        ...cells, total, ...opt, optTotal, c ? total - optTotal : "", Math.min(...filled), e.status, c ? c.kind : ""] });
+      rows.push({ k: e.k, o: EXERCISES.indexOf(ex), row: [
+        ...dateCols(e.k), FOCUS_LABEL[e.data.focus], ex.name, ex.group, e.stage, ladderOf(ex)[e.stage - 1], setsOf(ex),
+        ...cells, total, ...opt, optTotal, c ? total - optTotal : "", Math.min(...filled), e.status, c ? c.kind : "", e.data.activity] });
     });
   }
-  // sessions replaced by the activity (only in weeks that have entries)
-  for (let w = from; w <= Math.min(to, maxWeek()); w++) {
-    if (!hasData(w)) continue;
-    sessionsOfWeek(w).forEach((sess, s) => {
-      if (peek(w, s).activity !== A_TODAY) return;
-      const row = Array(CSV_HEAD.length).fill("");
-      row[0] = state.block; row[1] = Math.ceil(w / 10); row[2] = PLAN_LABEL[planOf(w)]; row[3] = w; row[4] = sess.name;
-      row[5] = state.activity.name; row[CSV_HEAD.indexOf("Status")] = "Activity today";
-      rows.push({ w, s, o: -1, row });
-    });
+  // days on which the activity was done ("sport done")
+  for (const k of Object.keys(state.days)) {
+    const d = peekDay(k);
+    if (k < from || k > to || d.activity !== A_TODAY) continue;
+    const row = Array(CSV_HEAD.length).fill("");
+    row.splice(0, 4, ...dateCols(k));
+    row[CSV_HEAD.indexOf("Focus")] = FOCUS_LABEL[d.focus];
+    row[CSV_HEAD.indexOf("Exercise")] = state.activity.name;
+    row[CSV_HEAD.indexOf("Status")] = "Activity today";
+    row[CSV_HEAD.indexOf("Activity")] = d.activity;
+    rows.push({ k, o: -1, row });
   }
-  rows.sort((a, b) => a.w - b.w || a.s - b.s || a.o - b.o);
+  rows.sort((a, b) => (a.k < b.k ? -1 : a.k > b.k ? 1 : a.o - b.o));
   return [CSV_HEAD, ...rows.map(r => r.row)];
 }
-
-const blockOf = w => Math.ceil(w / 10);
-const yearOf = w => Math.ceil(w / 52);
 
 // ============================================================ UI
 const $ = id => document.getElementById(id);
 const CLS = { [ST_UP]: "up", [ST_ADD]: "mid", [ST_CHECK]: "low" };
-const actLabel = v => v === A_TODAY ? `${state.activity.name} today` : v === A_NEXT ? `${state.activity.name} tomorrow` : `No ${state.activity.name}`;
+const actLabel = v => v === A_TODAY ? `${state.activity.name} today (sport done)` : v === A_NEXT ? `${state.activity.name} tomorrow` : `No ${state.activity.name}`;
 const groupsText = () => state.activity.groups.join(", ") || "no groups";
+const initials = name => (name.match(/[A-Za-z]+/g) || ["·"]).map(w => w[0].toUpperCase()).join("").slice(0, 2);
+const shortDate = k => fromKey(k).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
 function render() {
-  const S = sessionsOfWeek(state.week);
-  if (state.session >= S.length) state.session = 0;
-  $("weekLabel").textContent = `Week ${state.week} · ${PLAN_LABEL[planOf(state.week)]}`;
-  const b = blockOf(state.week), y = yearOf(state.week);
-  $("exportBlock").textContent = `Export 10-week block ${b} (weeks ${(b - 1) * 10 + 1}–${b * 10})`;
-  $("exportYear").textContent = `Export year ${y} (weeks ${(y - 1) * 52 + 1}–${y * 52})`;
+  const mon = mondayOf(viewDate), iso = isoWeek(viewDate);
+  $("weekLabel").textContent = `CW ${iso.week} · ${shortDate(mon)} – ${shortDate(addDays(mon, 6))} ${iso.year}`;
 
-  $("tabs").innerHTML = "";
-  $("tabs").style.gridTemplateColumns = `repeat(${S.length}, 1fr)`;
-  S.forEach((s, si) => {
-    const btn = document.createElement("button");
-    btn.textContent = s.name.replace("Full Body ", "FB ");
-    btn.setAttribute("role", "tab");
-    btn.setAttribute("aria-selected", String(si === state.session));
-    const d = peek(state.week, si);
-    if (d.activity === A_TODAY && slots(s.pattern).every(x => isSkipped(x.ex, d))) btn.classList.add("jj");
-    btn.onclick = () => { state.session = si; save(); render(); };
-    $("tabs").append(btn);
-  });
+  // week strip
+  const strip = $("days");
+  strip.innerHTML = "";
+  for (let i = 0; i < 7; i++) {
+    const k = addDays(mon, i), d = peekDay(k);
+    const tag = [FOCUS_SHORT[d.focus], d.activity === A_TODAY ? initials(state.activity.name) : ""].filter(Boolean).join(" ") || "·";
+    const b = document.createElement("button");
+    b.textContent = `${WEEKDAYS[i]}\n${fromKey(k).getDate()}\n${tag}`;
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", String(k === viewDate));
+    if (k === todayKey()) b.classList.add("today");
+    b.onclick = () => { viewDate = k; render(); };
+    strip.append(b);
+  }
 
-  const si = state.session, sess = S[si], data = peek(state.week, si);
+  const data = peekDay(viewDate);
   const panel = $("panel");
   panel.innerHTML = "";
 
-  // activity: none / today / tomorrow
-  const sel = document.createElement("select");
-  sel.className = "mode";
-  sel.setAttribute("aria-label", `${sess.name}: ${state.activity.name} today or tomorrow?`);
-  [A_NONE, A_TODAY, A_NEXT].forEach(v => sel.add(new Option(actLabel(v), v)));
-  sel.value = data.activity;
-  sel.onchange = () => { ensure(state.week, si).activity = sel.value; save(); render(); };
-  panel.append(sel);
+  const head = document.createElement("p");
+  head.className = "dayhead";
+  head.textContent = fromKey(viewDate).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  panel.append(head);
 
-  const shown = slots(sess.pattern).filter(x => !isSkipped(x.ex, data));
-  if (data.activity !== A_NONE) {
-    const p = document.createElement("p");
-    p.className = "note";
-    p.textContent = !shown.length
-      ? `${state.activity.name} replaces this session. Levels stay unchanged.`
-      : `${state.activity.name} trains ${groupsText()}, so those exercises are skipped ${data.activity === A_TODAY ? "today" : "today (activity tomorrow)"}.`;
-    panel.append(p);
+  // focus: free day / push / pull / full body
+  const fsel = document.createElement("select");
+  fsel.className = "mode";
+  fsel.setAttribute("aria-label", "Focus of this day");
+  Object.entries(FOCUS_LABEL).forEach(([v, l]) => fsel.add(new Option(l, v)));
+  fsel.value = data.focus;
+  fsel.onchange = () => { ensureDay(viewDate).focus = fsel.value; save(); render(); };
+  panel.append(fsel);
+
+  // activity: none / today / tomorrow
+  const asel = document.createElement("select");
+  asel.className = "mode";
+  asel.setAttribute("aria-label", `${state.activity.name} today or tomorrow?`);
+  [A_NONE, A_TODAY, A_NEXT].forEach(v => asel.add(new Option(actLabel(v), v)));
+  asel.value = data.activity;
+  asel.onchange = () => { ensureDay(viewDate).activity = asel.value; save(); render(); };
+  panel.append(asel);
+
+  const all = slots(data.focus);
+  const shown = all.filter(x => !isSkipped(x.ex, data));
+  const note = document.createElement("p");
+  note.className = "note";
+  if (data.focus === F_NONE) {
+    note.textContent = data.activity === A_TODAY
+      ? `${state.activity.name} is logged as sport done for this day.`
+      : "Free day. Choose Push, Pull or Full Body to log a workout.";
+    panel.append(note);
+  } else if (data.activity !== A_NONE) {
+    note.textContent = shown.length < all.length
+      ? `${state.activity.name} trains ${groupsText()}, so those exercises are skipped.`
+      : `${state.activity.name} does not train any exercise of this workout, nothing is skipped.`;
+    panel.append(note);
   }
 
   shown.forEach(({ ex, ss }) => {
     const tl = timeline(ex);
-    const idx = indexIn(tl, state.week, si);
+    const idx = indexIn(tl, viewDate);
     const cur = tl[idx];
     const ladder = ladderOf(ex);
     const stage = cur.stage;
@@ -595,7 +659,7 @@ function render() {
       l.className = "last";
       const vals = lastE.reps.map(x => (Number.isNaN(x) ? "–" : x));
       while (vals.length && vals[vals.length - 1] === "–") vals.pop();
-      const where = `Wk ${lastE.w} · ${sessionsOfWeek(lastE.w)[lastE.s].name}`;
+      const where = `${weekdayOf(lastE.k)} ${shortDate(lastE.k)}`;
       l.textContent = lastE.stage === stage
         ? `Last time (${where}): ${vals.join(" / ")} ${ex.unit}`
         : `Last time (${where}, level ${lastE.stage}: ${ladder[lastE.stage - 1]}): ${vals.join(" / ")} ${ex.unit}`;
@@ -608,14 +672,14 @@ function render() {
       if (c.jump && stage < maxStage(ex)) {
         const btn = document.createElement("button");
         btn.className = "small"; btn.textContent = "Take the next level now";
-        btn.onclick = () => { (state.jumps[ex.name] ||= []).push(`${state.week}:${si}`); save(); render(); };
+        btn.onclick = () => { (state.jumps[ex.name] ||= []).push(viewDate); save(); render(); };
         card.append(btn);
       }
     }
-    if ((state.jumps[ex.name] || []).includes(`${state.week}:${si}`)) {
+    if ((state.jumps[ex.name] || []).includes(viewDate)) {
       const btn = document.createElement("button");
       btn.className = "small"; btn.textContent = "Undo level jump";
-      btn.onclick = () => { state.jumps[ex.name] = state.jumps[ex.name].filter(k => k !== `${state.week}:${si}`); save(); render(); };
+      btn.onclick = () => { state.jumps[ex.name] = state.jumps[ex.name].filter(k => k !== viewDate); save(); render(); };
       card.append(btn);
     }
 
@@ -641,10 +705,10 @@ function render() {
       inp.value = (data.reps[ex.name] || [])[i] ?? "";
       inp.disabled = i >= setsOf(ex);
       inp.oninput = () => {
-        const d = ensure(state.week, si);
+        const d = ensureDay(viewDate);
         (d.reps[ex.name] ||= [])[i] = inp.value;
         save();
-        updateStatus(ex, si, st);
+        updateStatus(ex, st);
       };
       grid.append(inp);
     }
@@ -654,7 +718,7 @@ function render() {
     panel.append(card);
   });
 
-  if (sess.pattern === "Full") {
+  if (data.focus === "Full") {
     const card = document.createElement("section");
     card.className = "card";
     const h = document.createElement("h2"); h.textContent = "Stretching";
@@ -665,7 +729,7 @@ function render() {
     lab.className = "row";
     const cb = document.createElement("input");
     cb.type = "checkbox"; cb.checked = data.stretch; cb.style.minHeight = "0"; cb.style.width = "20px";
-    cb.onchange = () => { ensure(state.week, si).stretch = cb.checked; save(); };
+    cb.onchange = () => { ensureDay(viewDate).stretch = cb.checked; save(); };
     lab.append(cb, document.createTextNode("Done"));
     card.append(h, p, lab);
     panel.append(card);
@@ -673,8 +737,8 @@ function render() {
 }
 
 // update only the status line, so the keyboard stays open while typing
-function updateStatus(ex, si, el) {
-  const s = statusOf(ex, peek(state.week, si));
+function updateStatus(ex, el) {
+  const s = statusOf(ex, peekDay(viewDate));
   el.textContent = s;
   el.className = "status " + (CLS[s] || "");
 }
@@ -756,15 +820,6 @@ function buildEditor(ex, body) {
 }
 
 function renderSettings() {
-  $("block").value = state.block;
-
-  $("planTitle").textContent = `Training plan from week ${state.week} on`;
-  const plan = $("plan");
-  plan.innerHTML = "";
-  Object.entries(PLAN_LABEL).forEach(([v, l]) => plan.add(new Option(l, v)));
-  plan.value = planOf(state.week);
-  $("fbDays").value = state.fbDays;
-
   $("actName").value = state.activity.name;
   const box = $("actGroups");
   box.innerHTML = "";
@@ -813,25 +868,17 @@ function download(name, text, type) {
 const toCsv = rows => "\ufeff" + rows.map(r => r.map(esc).join(";")).join("\n");
 
 // ============================================================ Events
-$("prev").onclick = () => { state.week = Math.max(1, state.week - 1); save(); render(); };
-$("next").onclick = () => { state.week += 1; save(); render(); };
+$("prev").onclick = () => { viewDate = addDays(viewDate, -7); render(); };
+$("next").onclick = () => { viewDate = addDays(viewDate, 7); render(); };
+$("todayBtn").onclick = () => { viewDate = todayKey(); render(); };
 $("settingsBtn").onclick = () => show("settings");
 $("back").onclick = () => show("log");
-$("block").onchange = () => { state.block = $("block").value.trim() || "Block 1"; save(); };
-$("plan").onchange = () => { state.plans[state.week] = $("plan").value; state.session = 0; save(); };
-$("fbDays").onchange = () => {
-  state.fbDays = Math.min(5, Math.max(2, Number($("fbDays").value) || 3));
-  $("fbDays").value = state.fbDays; save();
-};
 $("actName").onchange = () => { state.activity.name = $("actName").value.trim() || "Activity"; save(); };
 
-$("exportBlock").onclick = () => {
-  const b = blockOf(state.week);
-  download(`progression-block-${b}.csv`, toCsv(csvRows((b - 1) * 10 + 1, b * 10)), "text/csv");
-};
-$("exportYear").onclick = () => {
-  const y = yearOf(state.week);
-  download(`progression-year-${y}.csv`, toCsv(csvRows((y - 1) * 52 + 1, y * 52)), "text/csv");
+$("exportCsv").onclick = () => {
+  const from = $("from").value, to = $("to").value;
+  const name = from || to ? `progression_${from || "start"}_${to || "end"}.csv` : "progression_all.csv";
+  download(name, toCsv(csvRows(from || undefined, to || undefined)), "text/csv");
 };
 $("exportJson").onclick = () =>
   download("progression-backup.json", JSON.stringify(state, null, 2), "application/json");
