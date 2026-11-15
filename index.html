@@ -112,13 +112,14 @@ const KG = (n, list) => list.map(k => `${n} + ${k} kg`);
 const VEST = (arr) => arr.map((s, i) => (i === arr.length - 1 ? s + " (vest)" : s));
 
 const DEFAULT_LADDERS = {
+  // Planche push-ups (not raises): pseudo-planche first, then banded and free variants of each planche shape
   "Planche Push-up Progression": [
     "Waist-Height Incline Push-ups", "Knee-Height Incline Push-ups", "Deep Push-ups",
     "Core-Level Pseudo-Planche Push-ups", "Waist-Level Pseudo-Planche Push-ups", "Hip-Level Pseudo-Planche Push-ups",
-    ...BAND("Tuck Planche Raises"), "Tuck Planche Raises", "Slow Tuck Planche Raises",
-    ...BAND("Slow Advanced Tuck Planche Raises"), "Slow Advanced Tuck Planche Raises",
-    "Slow Super Advanced Tuck Planche Raises",
-    ...BAND("Slow Planche Raises"), "Slow Planche Raises"
+    ...BAND("Tuck Planche Push-ups"), "Tuck Planche Push-ups",
+    ...BAND("Advanced Tuck Planche Push-ups"), "Advanced Tuck Planche Push-ups",
+    ...BAND("Straddle Planche Push-ups"), "Straddle Planche Push-ups",
+    ...BAND("Full Planche Push-ups"), "Full Planche Push-ups"
   ],
   "Pike / Handstand Push-up Progression": [
     "Pike Push-ups, Hands Elevated", "Pike Push-ups", "Deep Pike Push-ups",
@@ -139,17 +140,16 @@ const DEFAULT_LADDERS = {
     ...BAND("Pistol Squat"), "Pistol Squat, Unassisted",
     ...KG("Pistol Squat", ["2.5", "7.5", 10, 15])
   ],
-  "Core 1 Push (Ab Wheel)": [
-    "Ab Wheel, Kneeling, 1/4 Range", "Ab Wheel, Kneeling, Half Range", "Ab Wheel, Kneeling, 3/4 Range", "Ab Wheel, Kneeling, Full Range",
-    "Ab Wheel, Standing, 1/4 Range", "Ab Wheel, Standing, Half Range", "Ab Wheel, Standing, 3/4 Range", "Ab Wheel, Standing, Full Range",
-    "Ab Wheel, Standing, Full Range, 2 s Pause", "Ab Wheel, Standing, Full Range, 5 kg Vest",
-    "Ab Wheel, Standing, Full Range, 10 kg Vest"
+  // Push day core superset: L-sit + side plank (holds, in seconds)
+  "Core 1 Push (L-Sit)": [
+    "L-Sit, Foot-Supported (Heels on Floor)", "Tuck L-Sit", "Advanced Tuck L-Sit", "One-Leg L-Sit", "L-Sit",
+    "L-Sit, 5 kg Vest", "L-Sit, 10 kg Vest",
+    "Tuck V-Sit", "V-Sit, Bent Knees", "V-Sit"
   ],
-  "Core 2 Push (Dead Bug)": [
-    "Dead Bug, Knees Bent", "Dead Bug, Alternating Arms and Legs", "Dead Bug, Straight Legs",
-    "Dead Bug with 2.5 kg Dumbbell", "Dead Bug with 7.5 kg Dumbbell",
-    "Hollow Body Rocks, Knees Bent", "Hollow Body Rocks", "Hollow Body Rocks, Arms Extended",
-    "Hollow Body Rocks, 5 kg Vest"
+  "Core 2 Push (Side Plank)": [
+    "Side Plank, Knees Down", "Side Plank", "Side Plank, Top Leg Raised", "Side Plank, Feet Elevated",
+    "Copenhagen Plank, Knee on Bench", "Copenhagen Plank",
+    "Copenhagen Plank, 5 kg Vest", "Copenhagen Plank, 10 kg Vest"
   ],
   "Front Lever": [
     ...BAND("Tuck Front Lever"), "Tuck Front Lever",
@@ -173,53 +173,51 @@ const DEFAULT_LADDERS = {
     ...BAND("Straddle FL Pull-up"), "Straddle FL Pull-up",
     ...BAND("Full FL Pull-up"), "Full FL Pull-up"
   ],
-  "Hip Raise": [
-    "Glute Bridge", "Glute Bridge, 2 s Pause at Top", "Glute Bridge, Shoulders Elevated",
-    "Single-Leg Glute Bridge", "Single-Leg Glute Bridge, 2 s Pause at Top", "Single-Leg Glute Bridge, Shoulders Elevated",
-    ...KG("Single-Leg Glute Bridge, Shoulders Elevated", ["2.5", "7.5", 10, 15]),
-    "Single-Leg Glute Bridge, Shoulders Elevated + 30 kg (vest)"
+  // Glute bridge toward the Nordic curl (slider curls need sliders or a towel on a smooth floor)
+  "Glute Bridge / Nordic Curl Progression": [
+    "Glute Bridge", "Glute Bridge, 2 s Pause at Top",
+    "Single-Leg Glute Bridge", "Single-Leg Glute Bridge, Shoulders Elevated",
+    "Slider Leg Curl, Two Legs", "Slider Leg Curl, Single Leg",
+    ...BAND("Nordic Curl"), "Nordic Curl, Hand-Assisted", "Nordic Curl, Negative Only, 5 s", "Nordic Curl",
+    ...VEST(KG("Nordic Curl", [10, 20, 30]))
   ],
-  "Core 1 Pull (Lying Leg Raise)": [
-    "Lying Knee Raises", "Lying Knee Raises, 1 s Pause at Top", "Lying Leg Raises, Knees Bent",
-    "Lying Leg Raises, Straight Legs", "Lying Leg Raises, Straight Legs, 1 s Pause at Top",
-    "Lying Leg Raises, Straight Legs, 3 s Lowering",
-    "Lying Leg Raises with 2.5 kg Dumbbell Between Feet", "Lying Leg Raises with 7.5 kg Dumbbell Between Feet",
-    "V-Ups, Knees Bent", "V-Ups", "V-Ups, 3 s Lowering",
-    "Dragon Flag, Tuck Negative", "Dragon Flag, Negative", "Dragon Flag, Tuck", "Dragon Flag"
-  ],
-  "Core 2 Pull (Side Plank)": [
-    "Side Plank Hip Raise, Knee Down", "Side Plank Hip Raise", "Side Plank Hip Raise, 1 s Pause at Top",
-    "Side Plank Hip Raise, Hand Behind Head",
-    "Copenhagen Hip Raise, Knee on Bench", "Copenhagen Hip Raise", "Copenhagen Hip Raise, 1 s Pause at Top",
-    "Copenhagen Hip Raise, 5 kg Vest"
+  // Pull day core: single exercise, no superset
+  "Core Pull (Ab Wheel)": [
+    "Ab Wheel, Kneeling, 1/4 Range", "Ab Wheel, Kneeling, Half Range", "Ab Wheel, Kneeling, 3/4 Range", "Ab Wheel, Kneeling, Full Range",
+    "Ab Wheel, Standing, 1/4 Range", "Ab Wheel, Standing, Half Range", "Ab Wheel, Standing, 3/4 Range", "Ab Wheel, Standing, Full Range",
+    "Ab Wheel, Standing, Full Range, 2 s Pause", "Ab Wheel, Standing, Full Range, 5 kg Vest",
+    "Ab Wheel, Standing, Full Range, 10 kg Vest"
   ]
 };
 
-// pattern, sets, min reps, max reps, unit, start level (estimate, adjust in Settings)
+// pattern, sets, min, max, unit, start level (estimate, adjust in Settings), skipIfJjNext
+// skipIfJjNext: leg and core exercises that are left out on a Pull day when Jiu-Jitsu is the next day
 const PLAN = [
   ["Push", "Planche Push-up Progression", 4, 5, 10, "reps", 5],
   ["Push", "Pike / Handstand Push-up Progression", 4, 5, 10, "reps", 4],
   ["Push", "Dips", 4, 5, 10, "reps", 7],
   ["Push", "Pistol Squat", 4, 5, 10, "reps per side", 4],
-  ["Push", "Core 1 Push (Ab Wheel)", 3, 8, 12, "reps", 4],
-  ["Push", "Core 2 Push (Dead Bug)", 3, 8, 12, "reps", 2],
+  ["Push", "Core 1 Push (L-Sit)", 3, 10, 20, "sec", 2],
+  ["Push", "Core 2 Push (Side Plank)", 3, 20, 40, "sec per side", 2],
   ["Pull", "Front Lever", 5, 6, 10, "sec", 6],
   ["Pull", "Pull-up", 4, 5, 10, "reps", 7],
   ["Pull", "Row / FL Pull-up", 4, 5, 10, "reps", 2],
-  ["Pull", "Hip Raise", 4, 5, 10, "reps per side", 4],
-  ["Pull", "Core 1 Pull (Lying Leg Raise)", 3, 8, 12, "reps", 3],
-  ["Pull", "Core 2 Pull (Side Plank)", 3, 8, 12, "reps", 2]
-].map(([pattern, name, sets, min, max, unit, start]) => ({ pattern, name, sets, min, max, unit, start }));
+  ["Pull", "Glute Bridge / Nordic Curl Progression", 4, 5, 10, "reps", 3, true],
+  ["Pull", "Core Pull (Ab Wheel)", 3, 8, 12, "reps", 4, true]
+].map(([pattern, name, sets, min, max, unit, start, skipIfJjNext]) => ({ pattern, name, sets, min, max, unit, start, skipIfJjNext: !!skipIfJjNext }));
 
 const MODE_JJ = "Jiu-Jitsu";
 const MODE_TRAIN = "Training";
 
 const SESSIONS = [
-  { name: "Pull 1", pattern: "Pull", defaultMode: MODE_TRAIN },
-  { name: "Push 1", pattern: "Push", defaultMode: MODE_JJ },
-  { name: "Pull 2", pattern: "Pull", defaultMode: MODE_TRAIN },
-  { name: "Push 2", pattern: "Push", defaultMode: MODE_TRAIN }
+  { name: "Pull 1", pattern: "Pull", defaultMode: MODE_TRAIN, defaultJjNext: true },
+  { name: "Push 1", pattern: "Push", defaultMode: MODE_JJ, defaultJjNext: false },
+  { name: "Pull 2", pattern: "Pull", defaultMode: MODE_TRAIN, defaultJjNext: false },
+  { name: "Push 2", pattern: "Push", defaultMode: MODE_TRAIN, defaultJjNext: false }
 ];
+
+const NEXT_NORMAL = "Next day: normal";
+const NEXT_JJ = "Next day: Jiu-Jitsu";
 
 const ST_JJ = "Replaced by Jiu-Jitsu";
 const ST_UP = "Level up";
@@ -228,50 +226,45 @@ const ST_CHECK = "Check level";
 const ST_OPEN = "Incomplete";
 
 // ============================================================ State, storage, migration
-const KEY = "progression-v4";
-const OLD_KEY = "progression-v3";   // previous (German) version
+const KEY = "progression-v5";
+const OLD_KEY = "progression-v4";   // previous version
 
-const fresh = () => ({ version: 4, block: "Block 1", week: 1, session: 0, cfg: {}, ladders: {}, weeks: {} });
+const fresh = () => ({ version: 5, block: "Block 1", week: 1, session: 0, cfg: {}, ladders: {}, weeks: {} });
 
 function readJson(key) {
   try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
 }
 
-// Version 3 used German names. Entries, set counts and custom ladders are carried over.
+// Version 4 had different core exercises and different Planche and hip ladders.
+// Entries, set counts, rep ranges and custom ladders are carried over for exercises that still exist.
 // Start levels are only carried over for custom ladders, because the default ladders changed.
-const NAMES_V3 = {
-  "Planche push up progression": "Planche Push-up Progression",
-  "Pike push up progression": "Pike / Handstand Push-up Progression",
-  "Dips": "Dips",
-  "Pistol squat": "Pistol Squat",
-  "Core 1 Push (Ab Wheel)": "Core 1 Push (Ab Wheel)",
-  "Core 2 Push (Dead Bug)": "Core 2 Push (Dead Bug)",
-  "Front Lever": "Front Lever",
-  "Klimmzug": "Pull-up",
-  "Rudern / FL Pull-ups": "Row / FL Pull-up",
-  "Hüftheben": "Hip Raise",
-  "Core 1 Pull (Hanging)": "Core 1 Pull (Lying Leg Raise)",
-  "Core 2 Pull (Seitstütz)": "Core 2 Pull (Side Plank)"
-};
+const NAMES_V4 = { "Hip Raise": "Glute Bridge / Nordic Curl Progression" };
 
-function migrateV3(old) {
+function migrateV4(old) {
   const s = fresh();
   s.block = old.block || s.block;
   s.week = old.week || 1;
   s.session = old.session || 0;
-  const map = n => NAMES_V3[n] || n;
+  const map = n => NAMES_V4[n] || n;
+  const known = new Set(PLAN.map(e => e.name));
   for (const [name, c] of Object.entries(old.cfg || {})) {
+    const to = map(name);
+    if (!known.has(to)) continue;
     const next = {};
     for (const k of ["sets", "min", "max"]) if (c[k] != null) next[k] = c[k];
     if (c.start != null && old.ladders && old.ladders[name]) next.start = c.start;
-    if (Object.keys(next).length) s.cfg[map(name)] = next;
+    if (Object.keys(next).length) s.cfg[to] = next;
   }
-  for (const [name, arr] of Object.entries(old.ladders || {})) s.ladders[map(name)] = arr;
+  for (const [name, arr] of Object.entries(old.ladders || {})) {
+    if (known.has(map(name))) s.ladders[map(name)] = arr;
+  }
   for (const [w, sess] of Object.entries(old.weeks || {})) {
     for (const [sn, d] of Object.entries(sess)) {
       const reps = {};
-      for (const [name, arr] of Object.entries(d.reps || {})) reps[map(name)] = arr;
-      (s.weeks[w] ||= {})[sn] = { mode: d.mode === "Jiu Jitsu" ? MODE_JJ : d.mode, reps };
+      for (const [name, arr] of Object.entries(d.reps || {})) if (known.has(map(name))) reps[map(name)] = arr;
+      const entry = { mode: d.mode, reps };
+      if (d.jjNext != null) entry.jjNext = d.jjNext;
+      (s.weeks[w] ||= {})[sn] = entry;
     }
   }
   return s;
@@ -279,8 +272,8 @@ function migrateV3(old) {
 
 function normalize(data) {
   if (!data || typeof data !== "object" || !data.weeks) return null;
-  if (data.version === 4) return Object.assign(fresh(), data);
-  if (data.version === 3) return migrateV3(data);
+  if (data.version === 5) return Object.assign(fresh(), data);
+  if (data.version === 4) return migrateV4(data);
   return null;
 }
 
@@ -308,18 +301,24 @@ const exercisesOf = pattern => PLAN.filter(e => e.pattern === pattern);
 // read without creating an entry
 function peek(week, si) {
   const s = SESSIONS[si];
-  return state.weeks[week]?.[s.name] ?? { mode: s.defaultMode, reps: {} };
+  const d = state.weeks[week]?.[s.name];
+  if (!d) return { mode: s.defaultMode, reps: {}, jjNext: s.defaultJjNext };
+  return { ...d, jjNext: d.jjNext ?? s.defaultJjNext };
 }
 // write (creates the entry)
 function ensure(week, si) {
   const s = SESSIONS[si];
   const w = (state.weeks[week] ||= {});
-  return (w[s.name] ||= { mode: s.defaultMode, reps: {} });
+  return (w[s.name] ||= { mode: s.defaultMode, reps: {}, jjNext: s.defaultJjNext });
 }
+
+// leg and core exercises are skipped on a Pull day when Jiu-Jitsu is the next day
+const isSkipped = (ex, data) => ex.skipIfJjNext && data.jjNext === true;
 
 // ============================================================ Logic (same rules as the spreadsheet)
 function statusOf(ex, data) {
   if (data.mode === MODE_JJ) return ST_JJ;
+  if (isSkipped(ex, data)) return "";
   const n = setsOf(ex);
   const reps = (data.reps[ex.name] || []).slice(0, n)
     .filter(v => v !== "" && v != null).map(Number).filter(v => !Number.isNaN(v));
@@ -351,7 +350,7 @@ function lastEntry(ex, week, si) {
     const w = Math.floor(j / 2) + 1;
     const s = ex.pattern === "Pull" ? (j % 2 === 0 ? 0 : 2) : (j % 2 === 0 ? 1 : 3);
     const d = peek(w, s);
-    if (d.mode === MODE_JJ) continue;
+    if (d.mode === MODE_JJ || isSkipped(ex, d)) continue;
     const raw = (d.reps[ex.name] || []).slice(0, 6);
     let last = -1;
     raw.forEach((v, i) => { if (v !== "" && v != null) last = i; });
@@ -400,7 +399,23 @@ function render() {
     }
   }
 
-  exercisesOf(s.pattern).forEach(ex => {
+  if (s.pattern === "Pull") {
+    const sel = document.createElement("select");
+    sel.className = "mode";
+    sel.setAttribute("aria-label", s.name + ": is Jiu-Jitsu the next day?");
+    [NEXT_NORMAL, NEXT_JJ].forEach(m => sel.add(new Option(m, m)));
+    sel.value = data.jjNext ? NEXT_JJ : NEXT_NORMAL;
+    sel.onchange = () => { ensure(state.week, si).jjNext = sel.value === NEXT_JJ; save(); render(); };
+    panel.append(sel);
+    if (data.jjNext) {
+      const p = document.createElement("p");
+      p.className = "note";
+      p.textContent = "Jiu-Jitsu trains legs and core tomorrow, so the glute bridge / Nordic curl and the core exercise are skipped today.";
+      panel.append(p);
+    }
+  }
+
+  exercisesOf(s.pattern).filter(ex => !isSkipped(ex, data)).forEach(ex => {
     const ladder = ladderOf(ex);
     const stage = stageFor(ex, state.week, si);
     const card = document.createElement("section");
@@ -587,6 +602,7 @@ function csvRows() {
     SESSIONS.forEach((s, si) => {
       const data = peek(w, si);
       exercisesOf(s.pattern).forEach(ex => {
+        if (isSkipped(ex, data)) return;
         const raw = data.reps[ex.name] || [];
         const nums = raw.slice(0, 6).map(v => (v === "" || v == null ? "" : Number(v)));
         const filled = nums.filter(v => v !== "");
