@@ -1,6 +1,6 @@
 {
-  "name": "EMOM",
-  "short_name": "EMOM",
+  "name": "Progression",
+  "short_name": "Progression",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#EDF0F3",

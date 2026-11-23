@@ -5,85 +5,189 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1F5FBF">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="EMOM">
+<meta name="apple-mobile-web-app-title" content="Progression">
 <link rel="manifest" href="manifest.webmanifest">
-<title>EMOM</title>
+<title>Progression</title>
 <style>
-  :root { --bg: #EDF0F3; --surface: #FFFFFF; --ink: #16222E; --muted: #5B6B7A; --line: #D3DAE1; --accent: #1F5FBF; --ok: #2E7D4F; --warn: #B25E09; }
+  :root {
+    --bg: #EDF0F3; --surface: #FFFFFF; --ink: #16222E; --muted: #5B6B7A;
+    --line: #D3DAE1; --accent: #1F5FBF; --ok: #2E7D4F; --warn: #B25E09;
+  }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #11181F; --surface: #1A242E; --ink: #E8EDF2; --muted: #93A1AF; --line: #2B3844; --accent: #6FA3F0; --ok: #6CC391; --warn: #E8A15A; }
+    :root { --bg: #11181F; --surface: #1A242E; --ink: #E8EDF2; --muted: #93A1AF;
+            --line: #2B3844; --accent: #6FA3F0; --ok: #6CC391; --warn: #E8A15A; }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.4 -apple-system, system-ui, "Segoe UI", sans-serif;
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.4 -apple-system, system-ui, "Segoe UI", sans-serif;
          padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
   main { max-width: 560px; margin: 0 auto; padding: 16px; }
-  h1 { font-size: 1.4rem; margin: 0; } h2 { font-size: 1.05rem; margin: 0; } h3 { font-size: .95rem; margin: 18px 0 6px; }
-  button, select, input { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px; min-height: 44px; }
+  h1 { font-size: 1.4rem; margin: 0; }
+  h2 { font-size: 1.05rem; margin: 0; }
+  h3 { font-size: .95rem; margin: 18px 0 6px; }
+  button, select, input { font: inherit; color: var(--ink); background: var(--surface);
+         border: 1px solid var(--line); border-radius: 8px; padding: 10px; min-height: 44px; }
   .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0 12px; }
-  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
   .weekbar { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
-  .weekbar button { flex: 0 0 44px; } .weekbar strong { flex: 1; text-align: center; }
+  .weekbar button { flex: 0 0 44px; }
+  .weekbar strong { flex: 1; text-align: center; }
   .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 14px; }
   .days button { padding: 6px 0; font-size: .78rem; line-height: 1.25; white-space: pre-line; min-height: 58px; }
   .days button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .days button.today { border-width: 2px; border-color: var(--accent); }
-  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
-  .card h2 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
-  .muted { color: var(--muted); font-size: .88rem; margin: 2px 0 8px; }
-  .why { color: var(--accent); font-size: .9rem; margin: 6px 0 10px; font-weight: 600; }
-  .row { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
-  .row > * { flex: 1; } .row label { flex: 0 0 auto; color: var(--muted); font-size: .88rem; }
-  .field { display: block; width: 100%; margin-bottom: 10px; }
-  .primary { background: var(--accent); color: #fff; border-color: var(--accent); width: 100%; }
-  .small { min-height: 36px; padding: 6px 10px; font-size: .85rem; }
-  .note { color: var(--muted); font-size: .85rem; margin: 6px 0 12px; }
+  .days button.today { border-color: var(--accent); border-width: 2px; }
   .range { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .range input { width: 100%; }
+  .dayhead { font-size: 1rem; font-weight: 600; margin: 0 0 10px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+          padding: 14px; margin-bottom: 12px; }
+  .card h2 { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .variant { color: var(--muted); margin: 2px 0 10px; font-size: .9rem; }
+  .card h2 .variant { margin: 0; text-align: right; }
+  .last { color: var(--muted); font-size: .85rem; margin: -4px 0 6px; }
+  .target { color: var(--accent); font-weight: 600; font-size: .95rem; margin: 0 0 2px; }
+  .why { color: var(--muted); font-size: .8rem; margin: 0 0 10px; }
+  .row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; color: var(--muted); font-size: .9rem; }
+  .row select { width: 5.5rem; }
+  .sets { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sets input { width: 100%; text-align: center; }
+  .sets input:disabled { opacity: .35; }
+  .status { margin: 10px 0 0; font-weight: 600; min-height: 1.4em; }
+  .up { color: var(--ok); } .mid, .low { color: var(--warn); }
+  .mode { width: 100%; margin-bottom: 12px; }
+  .note { color: var(--muted); font-size: .85rem; margin: 6px 0 12px; }
   .actions { display: grid; gap: 8px; margin-top: 8px; }
+  .actions button { width: 100%; }
+  .primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .small { min-height: 36px; padding: 6px 10px; font-size: .85rem; }
   details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; }
   summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; padding: 0 14px; font-weight: 600; }
   .body { padding: 0 14px 14px; }
+  .cfg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+  .cfg label { display: block; color: var(--muted); font-size: .8rem; margin-bottom: 2px; }
+  .cfg input, .cfg select { width: 100%; text-align: center; padding: 8px 4px; }
   .step { display: grid; grid-template-columns: 2rem 1fr; gap: 6px; align-items: center; margin-bottom: 6px; }
-  .step span { color: var(--muted); text-align: right; font-size: .85rem; } .step input { width: 100%; padding: 8px 10px; }
-  .target { color: var(--accent); font-weight: 600; font-size: .95rem; margin: 6px 0 2px; }
+  .step span { color: var(--muted); text-align: right; font-size: .85rem; }
+  .step input { width: 100%; padding: 8px 10px; }
+  .btns { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .field { display: block; width: 100%; margin-bottom: 10px; }
+  .checks { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .checks label { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px;
+                  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  .checks input { min-height: 0; width: 18px; height: 18px; padding: 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .8rem; color: var(--muted); margin: 6px 0 10px; }
+  .legend i { display: inline-block; width: 24px; height: 0; border-top: 3px solid var(--accent); vertical-align: middle; margin-right: 6px; }
+  .legend i.ideal { border-top: 3px dashed var(--ok); }
+  .legend i.future { border-top: 3px dotted var(--ok); }
   #chart svg { width: 100%; height: auto; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+  .stat { margin: 0 0 6px; font-size: .92rem; }
+  .big { font-size: 2rem; font-weight: 700; text-align: center; margin: 8px 0; }
+  .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin: 10px 0; }
+  .bar i { display: block; height: 100%; background: var(--accent); width: 0; }
+  button:disabled { opacity: .4; }
   [hidden] { display: none !important; }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 </style>
 </head>
 <body>
 <main>
-  <!-- ======================= Home ======================= -->
-  <div id="homeView">
-    <div class="top"><h1>EMOM</h1>
-      <div class="btns"><button id="progressBtn" class="small">Progress</button><button id="settingsBtn" class="small">Settings</button></div></div>
-    <div class="weekbar"><button id="prev" aria-label="Previous week">‹</button><strong id="weekLabel"></strong><button id="next" aria-label="Next week">›</button></div>
-    <div class="days" id="days"></div>
-    <div id="dayPanel"></div>
+  <!-- ======================= Log view ======================= -->
+  <div id="logView">
+    <div class="top">
+      <h1>Progression</h1>
+      <div class="btns" style="margin:0"><button id="progressBtn">Progress</button><button id="settingsBtn">Settings</button></div>
+    </div>
+    <div class="weekbar">
+      <button id="prev" aria-label="Previous week">‹</button>
+      <strong id="weekLabel"></strong>
+      <button id="next" aria-label="Next week">›</button>
+    </div>
+    <div class="days" id="days" role="tablist"></div>
+    <button id="todayBtn" class="small" style="margin-bottom:12px">Jump to today</button>
+    <div id="panel"></div>
+
     <h3>Export</h3>
-    <div class="range"><input type="date" id="from" aria-label="Export from date"><input type="date" id="to" aria-label="Export to date"></div>
+    <div class="range">
+      <input type="date" id="from" aria-label="Export from date">
+      <input type="date" id="to" aria-label="Export to date">
+    </div>
     <div class="actions">
       <button id="exportCsv" class="primary">Export CSV</button>
       <button id="exportJson">Save backup (JSON)</button>
       <button id="importJson">Restore backup</button>
       <input type="file" id="file" accept="application/json,.json" hidden>
     </div>
-    <p class="note">Leave the dates empty to export everything. Your data is stored only in this browser on this device. Save a backup regularly.</p>
+    <p class="note">Leave the dates empty to export everything. Every row has the date, calendar week and focus, your sets and the optimum progressive-overload target. Your data is stored only in this browser on this device. Save a backup regularly. It includes your settings and ladders.</p>
+  </div>
+
+  <!-- ======================= EMOM ======================= -->
+  <div id="emomView" hidden>
+    <div class="top">
+      <button id="backE">‹ Back</button>
+      <h1>EMOM</h1>
+    </div>
+    <div id="emomBody"></div>
   </div>
 
   <!-- ======================= Progress ======================= -->
   <div id="progressView" hidden>
-    <div class="top"><button id="backP">‹ Back</button><h1>Progress</h1></div>
+    <div class="top">
+      <button id="backP">‹ Back</button>
+      <h1>Progress</h1>
+    </div>
     <select id="exSel" class="field" aria-label="Exercise"></select>
     <div id="chart"></div>
+    <div class="legend">
+      <span><i></i>Your progress</span>
+      <span><i class="ideal"></i>Ideal path</span>
+      <span><i class="future"></i>Next 3 sessions</span>
+    </div>
     <div id="stats"></div>
-    <p class="note">Solid line: total reps of every logged EMOM block (reps per minute × minutes done). Dashed line: the ideal path if every session reached its target: one more minute at the same reps, and when all minutes are done, one more rep per minute with about the same total. Dotted: the next 3 sessions. The ideal path ignores level changes.</p>
+    <p class="note">Progress score = level plus the position of your last set inside the rep range (level 7 with a last set of 8 in a 5–10 range is 6.6). The last set is the one that catches up last. The ideal path follows the same rule as your targets: one rep on one set per session, set 1 first, until all sets match, then set 1 again. When every set reaches the maximum, the next level starts at the minimum reps. Dotted = the next 3 sessions at your average training interval.</p>
+    <h3>EMOM</h3>
+    <select id="emSel" class="field" aria-label="EMOM exercise"></select>
+    <div id="emChart"></div>
+    <div id="emStats"></div>
   </div>
 
   <!-- ======================= Settings ======================= -->
   <div id="settingsView" hidden>
-    <div class="top"><button id="back">‹ Back</button><h1>Settings</h1></div>
-    <p class="note">Plans: choose which exercises and how many minutes belong to each day type. Exercises: every one starts at level 1; set the current level and edit the steps. Band 5 = strongest assistance, Band 1 = lightest. Empty fields are skipped.</p>
-    <div id="setList"></div>
+    <div class="top">
+      <button id="back">‹ Back</button>
+      <h1>Settings</h1>
+    </div>
+
+    <h3>Experience</h3>
+    <select id="experience" class="field" aria-label="Experience">
+      <option value="beginner">Beginner</option>
+      <option value="intermediate">Intermediate (default)</option>
+      <option value="pro">Pro</option>
+    </select>
+    <p class="note">Beginner: one set less on every exercise and 8–15 reps for rep exercises. Pro: one set more everywhere, the rep ranges stay. Values you set yourself per exercise are kept.</p>
+
+    <h3>Training phase</h3>
+    <select id="phase" class="field" aria-label="Training phase">
+      <option value="hypertrophy">Hypertrophy (5–10 reps, default)</option>
+      <option value="strength">Strength (3–8 reps)</option>
+    </select>
+    <p class="note">The phase sets the rep range of the rep exercises. Holds are not affected, beginners keep 8–15, and values you set per exercise are kept.</p>
+
+    <h3>Training focus</h3>
+    <select id="focus" class="field" aria-label="Training focus">
+      <option value="upper">Upper body (default)</option>
+      <option value="lower">Lower body</option>
+    </select>
+    <p class="note">Upper: three upper-body exercises and one leg exercise per Push or Pull day. Lower: the other way round, with leg exercises first, one easy upper-body exercise (knee push-ups or Australian pull-ups) and lateral raises and face pulls as extras. Days you already logged keep their exercises. The setting applies to days you plan from now on.</p>
+
+    <h3>Hobby / activity</h3>
+    <label class="note" for="actName">Name</label>
+    <input type="text" id="actName" class="field">
+    <p class="note">The activity trains these muscle groups. Exercises of the selected groups are skipped on the day before and on the day of the activity (set per day in the log).</p>
+    <div class="checks" id="actGroups"></div>
+
+    <h3>Exercises</h3>
+    <p class="note">Band 5 = strongest assistance, Band 1 = lightest. Levels run from top (easy) to bottom (hard). Empty fields are skipped, and trailing fields may stay empty. Inserting or deleting levels shifts the numbering, so check the start level afterwards.</p>
+    <div id="exList"></div>
+    <div id="emSettings"></div>
   </div>
 </main>
 
@@ -225,34 +329,90 @@ DEFAULT_LADDERS["Face Pulls"] = [
   "Face Pulls, Band 5, 1 s Pause", "Face Pulls, Bands 4 + 5 Doubled"
 ];
 
+// ============================================================ Exercises and focus days
+const GROUPS = ["Push", "Pull", "Legs", "Core"];
 
-DEFAULT_LADDERS["Lying Leg Raises"] = [
-  "Lying Knee Raises", "Lying Knee Raises, 1 s Pause at Top", "Lying Leg Raises, Knees Bent",
-  "Lying Leg Raises, Straight Legs", "Lying Leg Raises, Straight Legs, 1 s Pause at Top",
-  "Lying Leg Raises, Straight Legs, 3 s Lowering",
-  "Lying Leg Raises with 2.5 kg Dumbbell Between Feet", "Lying Leg Raises with 7.5 kg Dumbbell Between Feet"
-];
+// name, muscle group, sets, min, max, unit. Every exercise starts at level 1 (change the start level in Settings).
+const EXERCISES = [
+  ["Planche Push-up Progression", "Push", 4, 5, 10, "reps"],
+  ["Pike / Handstand Push-up Progression", "Push", 4, 5, 10, "reps"],
+  ["Dips", "Push", 4, 5, 10, "reps"],
+  ["Pistol Squat", "Legs", 4, 5, 10, "reps per side"],
+  ["Core 1 Push (L-Sit)", "Core", 3, 10, 20, "sec"],
+  ["Core 2 Push (Side Plank)", "Core", 3, 20, 40, "sec per side"],
+  ["Front Lever", "Pull", 5, 6, 10, "sec"],
+  ["Pull-up", "Pull", 4, 5, 10, "reps"],
+  ["Row / FL Pull-up", "Pull", 4, 5, 10, "reps"],
+  ["Glute Bridge / Nordic Curl Progression", "Legs", 4, 5, 10, "reps"],
+  ["Core Pull (Ab Wheel)", "Core", 3, 8, 12, "reps"],
+  ["Core 3 (Ab Compressions)", "Core", 3, 8, 12, "reps"],
+  ["Knee Push-up Progression", "Push", 4, 8, 12, "reps"],
+  ["Australian Pull-up Progression", "Pull", 4, 8, 12, "reps"],
+  ["Squat Progression", "Legs", 4, 8, 12, "reps"],
+  ["Split Squat / Lunge Progression", "Legs", 3, 8, 12, "reps per side"],
+  ["Step-up Progression", "Legs", 3, 8, 12, "reps per side"],
+  ["Hip Hinge / RDL Progression", "Legs", 4, 8, 12, "reps"],
+  ["Calf Raise Progression", "Legs", 3, 10, 15, "reps"],
+  ["Lateral Raises", "Push", 3, 10, 15, "reps"],
+  ["Face Pulls", "Pull", 3, 10, 15, "reps"]
+].map(([name, group, sets, min, max, unit]) => ({ name, group, sets, min, max, unit, start: 1 }));
+const EX = Object.fromEntries(EXERCISES.map(e => [e.name, e]));
 
-// ============================================================ Moves and plans
-// move name -> ladder it uses
-const MOVES = {
-  "Dips": "Dips", "Push-ups": "Planche Push-up Progression", "Pike Push-ups": "Pike / Handstand Push-up Progression",
-  "Pull-ups": "Pull-up", "Rows": "Row / FL Pull-up",
-  "Goblet Squat": "Squat Progression", "RDL": "Hip Hinge / RDL Progression",
-  "Ab Wheel": "Core Pull (Ab Wheel)", "Lying Leg Raises": "Lying Leg Raises"
+// Start levels of the versions before 8. They are kept for everyone who trained with them (see migrateV7).
+const V7_START = {
+  "Planche Push-up Progression": 5, "Pike / Handstand Push-up Progression": 4, "Dips": 7, "Pistol Squat": 4,
+  "Core 1 Push (L-Sit)": 2, "Core 2 Push (Side Plank)": 2, "Front Lever": 6, "Pull-up": 7, "Row / FL Pull-up": 2,
+  "Glute Bridge / Nordic Curl Progression": 3, "Core Pull (Ab Wheel)": 4, "Core 3 (Ab Compressions)": 1
 };
-// default EMOM plans per day type: each option is a list of [move, planned minutes]; editable in Settings
-const PLANS = {
-  Push: [{ blocks: [["Dips", 10], ["Push-ups", 10]] }, { blocks: [["Pike Push-ups", 20]] }],
-  Pull: [{ blocks: [["Pull-ups", 20]] }, { blocks: [["Rows", 20]] }],
-  Legs: [{ blocks: [["Goblet Squat", 10], ["RDL", 10]] }],
-  Core: [{ blocks: [["Ab Wheel", 10], ["Lying Leg Raises", 10]] }]
-};
-const TYPES = Object.keys(PLANS);
-const clone = o => JSON.parse(JSON.stringify(o));
-const planLabel = p => p.blocks.map(([m, min]) => `${m} ${min}`).join(" + ");
 
-// ============================================================ Dates
+// What a day with this focus contains: [exercise, superset letter]. Exercises are shared between Push, Pull and
+// Full Body, so levels and targets follow the exercise, not the day.
+// Upper: three upper-body exercises plus one leg exercise per day. Lower: the other way round.
+const FOCUS_PATTERNS = {
+  upper: {
+    Push: [["Planche Push-up Progression"], ["Pike / Handstand Push-up Progression"], ["Dips"], ["Pistol Squat"],
+           ["Core 1 Push (L-Sit)", "A"], ["Core 2 Push (Side Plank)", "A"]],
+    Pull: [["Front Lever"], ["Pull-up"], ["Row / FL Pull-up"], ["Glute Bridge / Nordic Curl Progression"], ["Core Pull (Ab Wheel)"]],
+    // Full body: big lifts only, no skills, 5 sets each
+    Full: [["Dips", "", 5], ["Pike / Handstand Push-up Progression", "", 5], ["Pull-up", "", 5], ["Row / FL Pull-up", "", 5],
+           ["Pistol Squat", "", 5], ["Glute Bridge / Nordic Curl Progression", "", 5],
+           ["Core 1 Push (L-Sit)", "A", 5], ["Core 3 (Ab Compressions)", "A", 5]],
+    // Upper / lower split: 3 push + 3 pull, and 2 leg + 2 core exercises (3-5 sets, change the sets on the card)
+    Upper: [["Planche Push-up Progression"], ["Pike / Handstand Push-up Progression"], ["Dips"],
+            ["Pull-up"], ["Row / FL Pull-up"], ["Front Lever"]],
+    Lower: [["Pistol Squat"], ["Glute Bridge / Nordic Curl Progression"], ["Core Pull (Ab Wheel)", "A"], ["Core 1 Push (L-Sit)", "A"]]
+  },
+  lower: {
+    Push: [["Squat Progression"], ["Split Squat / Lunge Progression"], ["Step-up Progression"],
+           ["Knee Push-up Progression"], ["Lateral Raises"],
+           ["Core 1 Push (L-Sit)", "A"], ["Core 2 Push (Side Plank)", "A"]],
+    Pull: [["Hip Hinge / RDL Progression"], ["Glute Bridge / Nordic Curl Progression"], ["Calf Raise Progression"],
+           ["Australian Pull-up Progression"], ["Face Pulls"], ["Core Pull (Ab Wheel)"]],
+    Full: [["Squat Progression"], ["Hip Hinge / RDL Progression"], ["Knee Push-up Progression"], ["Australian Pull-up Progression"],
+           ["Split Squat / Lunge Progression", "A"], ["Glute Bridge / Nordic Curl Progression", "A"],
+           ["Lateral Raises", "B"], ["Face Pulls", "B"], ["Core 3 (Ab Compressions)"]],
+    Upper: [["Knee Push-up Progression"], ["Lateral Raises"], ["Pike / Handstand Push-up Progression"],
+            ["Australian Pull-up Progression"], ["Face Pulls"], ["Row / FL Pull-up"]],
+    Lower: [["Squat Progression"], ["Hip Hinge / RDL Progression"], ["Core Pull (Ab Wheel)", "A"], ["Core 3 (Ab Compressions)", "A"]]
+  }
+};
+// sets given by the day type (for example 5 on a full body day), if any
+const patternSets = (ex, data) => data ? (FOCUS_PATTERNS[data.tf] || FOCUS_PATTERNS.upper)[data.focus]?.find(([n]) => n === ex.name)?.[2] : undefined;
+const slotsFor = (tf, focus) => ((FOCUS_PATTERNS[tf] || FOCUS_PATTERNS.upper)[focus] || []).map(([name, ss]) => ({ ex: EX[name], ss: ss || "" }));
+const slotsOf = day => slotsFor(day.tf, day.focus);
+const exercisesOfFocus = tf => [...new Set(Object.values(FOCUS_PATTERNS[tf]).flat().map(([n]) => n))].map(n => EX[n]);
+
+const F_NONE = "none";
+const FOCUS_LABEL = { none: "Free day", Push: "Push", Pull: "Pull", Full: "Full Body", Upper: "Upper Body", Lower: "Lower Body", EMOM: "EMOM" };
+const FOCUS_SHORT = { none: "", Push: "Push", Pull: "Pull", Full: "FB", Upper: "Up", Lower: "Low", EMOM: "EM" };
+const A_NONE = "none", A_TODAY = "today", A_NEXT = "tomorrow";
+
+const ST_UP = "Level up";
+const ST_ADD = "Add reps";
+const ST_CHECK = "Check level";
+const ST_OPEN = "Incomplete";
+
+// ============================================================ Dates (local time, keys like 2026-11-16)
 const pad = n => String(n).padStart(2, "0");
 const toKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const fromKey = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
@@ -261,52 +421,1174 @@ const todayKey = () => toKey(new Date());
 const mondayOf = k => addDays(k, -((fromKey(k).getDay() + 6) % 7));
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const weekdayOf = k => WEEKDAYS[(fromKey(k).getDay() + 6) % 7];
-const dayNum = k => { const [y, m, d] = k.split("-").map(Number); return Math.round(Date.UTC(y, m - 1, d) / 86400000); };
-const shortDate = k => fromKey(k).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+
+// ISO calendar week (Monday start, week 1 contains the first Thursday)
 function isoWeek(k) {
   const d = fromKey(k);
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 3);
-  const year = d.getFullYear(), jan4 = new Date(year, 0, 4);
-  return { year, week: 1 + Math.round(((d - jan4) / 86400000 - 3 + ((jan4.getDay() + 6) % 7)) / 7) };
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + 3);     // Thursday of this week
+  const year = d.getFullYear();
+  const jan4 = new Date(year, 0, 4);
+  const week = 1 + Math.round(((d - jan4) / 86400000 - 3 + ((jan4.getDay() + 6) % 7)) / 7);
+  return { year, week };
 }
 
-// ============================================================ State (backups of the earlier timer version load unchanged)
-const KEY = "emom-v1";
-const fresh = () => ({ version: 1, levels: {}, start: {}, ladders: {}, plans: clone(PLANS), days: {} });
-function normalize(data) {
-  if (!data || typeof data !== "object" || data.version !== 1 || !data.days) return null;
-  const s = Object.assign(fresh(), data);
-  s.plans = Object.assign(clone(PLANS), data.plans || {});
+// ============================================================ State, storage, migration
+const KEY = "progression-v8";
+const OLD_KEYS = ["progression-v7", "progression-v6", "progression-v5", "progression-v4"];
+
+const defaultActivity = () => ({ name: "Jiu-Jitsu", groups: ["Push", "Legs", "Core"] });
+const fresh7 = () => ({ version: 7, activity: defaultActivity(), cfg: {}, ladders: {}, jumps: {}, days: {} });
+const fresh = () => ({ version: 8, focus: "upper", experience: "intermediate", phase: "hypertrophy", activity: defaultActivity(), cfg: {}, ladders: {}, jumps: {}, shifts: {}, emoms: [], days: {} });
+
+function readJson(key) {
+  try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
+}
+
+// ---- Versions 4 and 5 (training / Jiu-Jitsu mode per session) become the version 6 shape first
+const NAMES_V4 = { "Hip Raise": "Glute Bridge / Nordic Curl Progression" };
+const fresh6 = () => ({ version: 6, week: 1, session: 0, fbDays: 3, plans: {}, activity: defaultActivity(), cfg: {}, ladders: {}, jumps: {}, weeks: {} });
+
+function migrateLegacy(old) {
+  const s = fresh6();
+  s.week = old.week || 1;
+  const map = n => NAMES_V4[n] || n;
+  for (const [name, c] of Object.entries(old.cfg || {})) {
+    const to = map(name);
+    if (!EX[to]) continue;
+    const next = {};
+    for (const k of ["sets", "min", "max"]) if (c[k] != null) next[k] = c[k];
+    if (c.start != null && (old.version === 5 || (old.ladders && old.ladders[name]))) next.start = c.start;
+    if (Object.keys(next).length) s.cfg[to] = next;
+  }
+  for (const [name, arr] of Object.entries(old.ladders || {})) if (EX[map(name)]) s.ladders[map(name)] = arr;
+  for (const [w, sess] of Object.entries(old.weeks || {})) {
+    for (const [sn, d] of Object.entries(sess)) {
+      const reps = {};
+      for (const [name, arr] of Object.entries(d.reps || {})) if (EX[map(name)]) reps[map(name)] = arr;
+      const entry = { reps };
+      if (d.mode === "Jiu-Jitsu") entry.activity = A_TODAY;
+      else if (d.jjNext === true) entry.activity = A_NEXT;
+      else if (d.jjNext === false || (/^Push/.test(sn) && d.mode === "Training")) entry.activity = A_NONE;
+      (s.weeks[w] ||= {})[sn] = entry;
+    }
+  }
   return s;
 }
-let state = null;
-try { state = normalize(JSON.parse(localStorage.getItem(KEY))); } catch (e) { /* first start */ }
-state = state || fresh();
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage full or blocked */ } };
 
-const plansOf = type => (state.plans[type] && state.plans[type].length ? state.plans[type] : PLANS[type]);
-const ladderOf = move => {
-  const l = (state.ladders[move] ?? DEFAULT_LADDERS[MOVES[move]]).map(s => String(s ?? "").trim()).filter(Boolean);
+// ---- Version 6 (week and session numbers) becomes calendar days.
+// Week numbers had no real date, so the week you were viewing is placed in the current calendar week.
+// Sessions go to these weekdays: Pull 1 Mon, Push 1 Tue, Pull 2 Thu, Push 2 Sat, Full Body 1-5 Mon/Wed/Fri/Sat/Sun.
+const V6_SESSION = {
+  "Pull 1": { focus: "Pull", day: 0, act: A_NEXT }, "Push 1": { focus: "Push", day: 1, act: A_TODAY },
+  "Pull 2": { focus: "Pull", day: 3, act: A_NONE }, "Push 2": { focus: "Push", day: 5, act: A_NONE }
+};
+[0, 2, 4, 5, 6].forEach((day, i) => { V6_SESSION[`Full Body ${i + 1}`] = { focus: "Full", day, act: A_NONE }; });
+
+function migrateV6(old) {
+  const s = fresh7();
+  s.activity = Object.assign(defaultActivity(), old.activity);
+  s.cfg = old.cfg || {};
+  s.ladders = old.ladders || {};
+  const anchor = mondayOf(todayKey());
+  const cur = old.week || 1;
+  const dateOf = (w, day) => addDays(anchor, (w - cur) * 7 + day);
+  const planOf = w => { for (let i = w; i >= 1; i--) if ((old.plans || {})[i]) return old.plans[i]; return "pushpull"; };
+
+  for (const [w, sess] of Object.entries(old.weeks || {})) {
+    const week = Number(w);
+    let any = false;
+    for (const [sn, d] of Object.entries(sess)) {
+      const def = V6_SESSION[sn];
+      if (!def) continue;
+      const reps = d.reps || {};
+      if (Object.values(reps).some(a => a.some(v => v !== "" && v != null))) any = true;
+      const activity = d.activity ?? def.act;
+      let focus = def.focus;
+      // a session that the activity replaced completely is a free day with sport
+      if (activity === A_TODAY && slotsFor("upper", focus).every(x => (old.activity?.groups || defaultActivity().groups).includes(x.ex.group))) focus = F_NONE;
+      s.days[dateOf(week, def.day)] = { focus, activity, reps };
+      if (d.stretch) s.days[dateOf(week, def.day)].stretch = true;
+    }
+    // Push 1 was a Jiu-Jitsu day by default: keep it as a sport day in weeks that have entries
+    const tue = dateOf(week, 1);
+    if (any && !s.days[tue]) s.days[tue] = { focus: F_NONE, activity: A_TODAY, reps: {} };
+  }
+  // manual level jumps: "week:sessionIndex" -> date
+  for (const [name, list] of Object.entries(old.jumps || {})) {
+    s.jumps[name] = list.map(key => {
+      const [w, si] = key.split(":").map(Number);
+      const plan = planOf(w);
+      const sn = plan === "fullbody" ? `Full Body ${si + 1}` : ["Pull 1", "Push 1", "Pull 2", "Push 2"][si];
+      const def = V6_SESSION[sn];
+      return def ? dateOf(w, def.day) : null;
+    }).filter(Boolean);
+  }
+  return s;
+}
+
+// Version 7 -> 8: every exercise now starts at level 1 for new users. People who already trained keep the start
+// levels they had (their own setting, or the old default), so nothing changes for them. Existing days are upper focus.
+function migrateV7(old) {
+  const s = Object.assign(fresh(), old, { version: 8, focus: "upper" });
+  s.activity = Object.assign(defaultActivity(), old.activity);
+  s.cfg = JSON.parse(JSON.stringify(old.cfg || {}));
+  for (const [name, start] of Object.entries(V7_START)) {
+    if (s.cfg[name]?.start == null) (s.cfg[name] ||= {}).start = start;
+  }
+  s.days = {};
+  for (const [k, d] of Object.entries(old.days || {})) s.days[k] = Object.assign({ tf: "upper" }, d);
+  return s;
+}
+
+function normalize(data) {
+  if (!data || typeof data !== "object") return null;
+  if (data.version === 8 && data.days) {
+    const s = Object.assign(fresh(), data);
+    s.activity = Object.assign(defaultActivity(), data.activity);
+    return s;
+  }
+  if (data.version === 7 && data.days) return migrateV7(data);
+  if (data.version === 6 && data.weeks) return migrateV7(migrateV6(data));
+  if ((data.version === 4 || data.version === 5) && data.weeks) return migrateV7(migrateV6(migrateLegacy(data)));
+  return null;
+}
+
+let state = normalize(readJson(KEY));
+if (!state) for (const k of OLD_KEYS) { state = normalize(readJson(k)); if (state) break; }
+state = state || fresh();
+let viewDate = todayKey();
+
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* storage full or blocked */ }
+}
+
+// ---- Settings access
+const cfgOf = (ex, k) => state.cfg[ex.name]?.[k] ?? ex[k];
+const setCfg = (ex, k, v) => { (state.cfg[ex.name] ||= {})[k] = v; save(); };
+// Experience: beginner = one set less and 8-15 reps (rep exercises), pro = one set more. Your own per-exercise
+// settings always win.
+const EXPERIENCE = { beginner: "Beginner", intermediate: "Intermediate", pro: "Pro" };
+const isHold = ex => ex.unit.startsWith("sec");
+const expDelta = () => (state.experience === "beginner" ? -1 : state.experience === "pro" ? 1 : 0);
+const setsOf = (ex, data) => state.cfg[ex.name]?.sets ?? Math.min(6, Math.max(2, (patternSets(ex, data) ?? ex.sets) + expDelta()));
+// Training phase: hypertrophy keeps the default ranges (5-10 for the main exercises), strength uses 3-8 reps.
+// Beginners always use 8-15. Holds (seconds) are not affected.
+const phaseRange = ex => isHold(ex) ? [ex.min, ex.max]
+  : state.experience === "beginner" ? [8, 15]
+  : state.phase === "strength" ? [3, 8] : [ex.min, ex.max];
+const minOf = ex => state.cfg[ex.name]?.min ?? phaseRange(ex)[0];
+const maxOf = ex => state.cfg[ex.name]?.max ?? phaseRange(ex)[1];
+const startOf = ex => cfgOf(ex, "start");
+
+// empty fields are skipped
+const ladderOf = ex => {
+  const l = (state.ladders[ex.name] ?? DEFAULT_LADDERS[ex.name]).map(s => String(s ?? "").trim()).filter(Boolean);
   return l.length ? l : ["(no level defined)"];
 };
-const levelOf = move => Math.min(Math.max(state.levels[move] ?? 1, 1), ladderOf(move).length);
-const setLevel = (move, n) => { state.levels[move] = Math.min(Math.max(n, 1), ladderOf(move).length); save(); };
-const dayOf = k => state.days[k] || { sport: false, sessions: [] };
-const ensureDay = k => (state.days[k] ||= { sport: false, sessions: [] });
+const maxStage = ex => ladderOf(ex).length;
 
-// every logged block of one move, oldest first. reps = reps per minute, done = minutes you managed, minutes = planned minutes
-function history(move) {
+// ---- Days
+// read without creating an entry. tf = body focus the day was planned with (upper or lower)
+function peekDay(k) {
+  const d = state.days[k];
+  return { focus: d?.focus ?? F_NONE, activity: d?.activity ?? A_NONE, reps: d?.reps ?? {}, stretch: !!d?.stretch,
+           tf: d ? (d.tf ?? "upper") : state.focus };
+}
+// write (creates the entry)
+function ensureDay(k) {
+  return (state.days[k] ||= { focus: F_NONE, activity: A_NONE, reps: {}, tf: state.focus });
+}
+
+// An activity (e.g. Jiu-Jitsu) skips the exercises of the muscle groups it trains, today and the day before
+const isSkipped = (ex, data) => data.activity !== A_NONE && state.activity.groups.includes(ex.group);
+
+// ============================================================ Logic
+const filledReps = (ex, data) => (data.reps[ex.name] || []).slice(0, 6).map(v => (v === "" || v == null ? NaN : Number(v)));
+
+function statusOf(ex, data) {
+  if (isSkipped(ex, data)) return "";
+  const n = setsOf(ex, data);
+  const reps = filledReps(ex, data).slice(0, n).filter(v => !Number.isNaN(v));
+  if (!reps.length) return "";
+  if (reps.length < n) return ST_OPEN;
+  const low = Math.min(...reps);
+  if (low >= maxOf(ex)) return ST_UP;
+  if (low >= minOf(ex)) return ST_ADD;
+  return ST_CHECK;
+}
+
+// Chronological history of one exercise across all days (whatever the focus was) with the level of every day.
+// Level rule: start level, plus one step after every day with status "Level up", plus manual jumps.
+function timeline(ex) {
+  const jumps = new Set(state.jumps[ex.name] || []);        // older +1 level jumps
+  const shifts = state.shifts[ex.name] || {};               // level changes by you: { date: +1 / -1 / ... }
+  const top = maxStage(ex);
+  const clampS = v => Math.min(top, Math.max(1, v));
+  let stage = clampS(startOf(ex));
+  const out = [];
+  const dates = new Set([...Object.keys(state.days), viewDate, ...Object.keys(shifts), ...jumps]);
+  for (const k of [...dates].sort()) {
+    stage = clampS(stage + (jumps.has(k) ? 1 : 0) + (shifts[k] || 0));
+    const data = peekDay(k);
+    if (!slotsOf(data).some(x => x.ex === ex)) continue;
+    const skipped = isSkipped(ex, data);
+    const reps = skipped ? [] : filledReps(ex, data);
+    const e = { k, stage, data, skipped, reps, status: statusOf(ex, data), logged: reps.some(v => !Number.isNaN(v)) };
+    out.push(e);
+    if (e.status === ST_UP) stage = clampS(stage + 1);
+  }
+  out.final = stage;                                         // level after the last day
+  return out;
+}
+
+// move the level up or down from this date on (the start level in Settings stays untouched)
+function adjustLevel(ex, k, delta) {
+  const jumps = state.jumps[ex.name] || [];
+  const had = jumps.includes(k) ? 1 : 0;
+  if (had) state.jumps[ex.name] = jumps.filter(x => x !== k);
+  const m = (state.shifts[ex.name] ||= {});
+  const net = had + (m[k] || 0) + delta;
+  if (net === 0) delete m[k]; else m[k] = net;
+  save();
+}
+const levelShiftAt = (ex, k) => (state.jumps[ex.name] || []).includes(k) ? 1 + (state.shifts[ex.name]?.[k] || 0) : (state.shifts[ex.name]?.[k] || 0);
+
+const indexIn = (tl, k) => tl.findIndex(e => e.k === k);
+
+const mean = arr => { const v = arr.filter(x => !Number.isNaN(x)); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0; };
+
+// One rep on one set per session: the first set that is below your best set goes up first.
+// When all sets are equal, set 1 goes up again. Example: 5/5/5/5 -> 6/5/5/5 -> 6/6/5/5 -> 6/6/6/5 -> 6/6/6/6 -> 7/6/6/6.
+function raiseOne(vals, max, step) {
+  const v = vals.slice();
+  const best = Math.max(...v);
+  const i = v.findIndex(x => x < best);
+  if (i === -1) v[0] = Math.min(max, v[0] + step);
+  else v[i] = Math.min(best, v[i] + step);
+  return v;
+}
+
+// Progressive-overload coach (rule based, works offline). Strategies: more reps set by set, a bigger step when
+// stuck, a harder variation at the low end of the rep range (intensity), more sets (volume).
+function coach(ex, tl, idx) {
+  const cur = tl[idx];
+  const logged = tl.slice(0, idx).filter(e => e.logged);
+  if (!cur || !logged.length) return null;
+  const last = logged[logged.length - 1];
+  const n = setsOf(ex, cur.data), min = minOf(ex), max = maxOf(ex), top = maxStage(ex);
+  const step = ex.unit.startsWith("sec") ? 2 : 1;
+  const unit = ex.unit;
+
+  if (last.stage < cur.stage) {
+    return { kind: "levelup", values: Array(n).fill(min), sets: n,
+      text: `Level up: aim for ${min}+ ${unit} on every set`,
+      why: `You reached ${max} on every set, so the exercise gets harder. Start at the low end of the range.` };
+  }
+  if (last.stage > cur.stage) {
+    const mid = Math.round((min + max) / 2);
+    return { kind: "leveldown", values: Array(n).fill(mid), sets: n,
+      text: `Easier level: aim for ${mid}+ ${unit} on every set`,
+      why: `You moved down a level. Start in the middle of the range and build up again.` };
+  }
+
+  // days at the same level, newest last
+  const run = [];
+  for (let i = logged.length - 1; i >= 0 && logged[i].stage === cur.stage; i--) run.unshift(logged[i]);
+  let stall = 0;
+  for (let i = run.length - 1; i >= 1; i--) {
+    if (mean(run[i].reps) <= mean(run[i - 1].reps)) stall++; else break;
+  }
+  const lastNums = last.reps.slice(0, n);
+  const fallback = lastNums.filter(v => !Number.isNaN(v)).slice(-1)[0] ?? min;
+  const base = Array.from({ length: n }, (_, i) => (Number.isNaN(lastNums[i]) || lastNums[i] == null ? fallback : lastNums[i]));
+  const raise = times => { let r = base; for (let t = 0; t < times; t++) r = raiseOne(r, max, step); return r; };
+  const changed = vals => vals.map((v, i) => (v !== base[i] ? i + 1 : null)).filter(Boolean);
+
+  if (Math.min(...base) < min) {
+    const up = base.map(v => Math.max(min, v));
+    return { kind: "base", values: up, sets: n,
+      text: `Build the base: ${up.join(" / ")} ${unit}`,
+      why: `Your weakest set was below ${min}. Reach ${min}+ on every set before progressing.` };
+  }
+  if (stall >= 3) {
+    if (cur.stage < top) {
+      return { kind: "plateau", values: Array(n).fill(min), sets: n, jump: true,
+        text: `Plateau: try the next level, ${min}+ ${unit} per set`,
+        why: `No progress for ${stall} sessions. Vary the intensity: ${ladderOf(ex)[cur.stage]} at the low end of the range. Or add one set (${n + 1} sets).` };
+    }
+    const v = raise(1);
+    return { kind: "plateau", values: v, sets: Math.min(6, n + 1),
+      text: `Plateau at the top level: add a set (${Math.min(6, n + 1)} sets), ${v.join(" / ")} ${unit}`,
+      why: `No progress for ${stall} sessions. More volume or a different rep range (change the range in Settings).` };
+  }
+  if (stall === 2) {
+    const v = raise(2);
+    return { kind: "push", values: v, sets: n,
+      text: `Step up: ${v.join(" / ")} ${unit}`,
+      why: `Same result for 2 sessions. Raise two sets this time (set ${changed(v).join(" and ")}).` };
+  }
+  if (base.every(v => v >= max)) {
+    return { kind: "reps", values: base, sets: n, text: `Hold ${max} ${unit} on every set`,
+      why: `Every set is at the top of the range. The next level follows after this session.` };
+  }
+  const v = raise(1);
+  return { kind: "reps", values: v, sets: n,
+    text: `Target: ${v.join(" / ")} ${unit}`,
+    why: `Raise set ${changed(v).join(" and ")} by ${step}. The first set below your best set goes up first. When all sets match, set 1 goes up again.` };
+}
+
+// ============================================================ Progress score and ideal path
+const clamp01 = x => Math.min(1, Math.max(0, x));
+const dayNum = k => { const [y, m, d] = k.split("-").map(Number); return Math.round(Date.UTC(y, m - 1, d) / 86400000); };
+const lastSetOf = reps => { const v = reps.filter(x => !Number.isNaN(x)); return v.length ? v[v.length - 1] : 0; };
+
+// level number plus the position of the last set inside the rep range: level 7, last set 8 of 5-10 reps = 6.6.
+// The last set is the one that catches up last, so it shows when all sets have reached the new rep level.
+function scoreOf(ex, stage, lastSet) {
+  const range = maxOf(ex) - minOf(ex);
+  return stage - 1 + (range > 0 ? clamp01((lastSet - minOf(ex)) / range) : 0);
+}
+
+// actual: every logged day. ideal: the path from the first logged day if every session followed the target,
+// plus `future` more sessions at your average training interval
+function progressSeries(ex, future = 3) {
+  const tl = timeline(ex).filter(e => e.logged);
+  const actual = tl.map((e, i) => ({ i, k: e.k, day: dayNum(e.k), stage: e.stage, reps: e.reps, score: scoreOf(ex, e.stage, lastSetOf(e.reps)) }));
+  const ideal = [];
+  if (tl.length) {
+    const n = setsOf(ex, tl[tl.length - 1].data), min = minOf(ex), max = maxOf(ex), top = maxStage(ex);
+    const step = ex.unit.startsWith("sec") ? 2 : 1;
+    const gaps = actual.slice(1).map((p, i) => p.day - actual[i].day).filter(g => g > 0);
+    const gap = Math.max(2, Math.round(gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : 4));
+    const first = tl[0].reps;
+    let stage = tl[0].stage;
+    let vals = Array.from({ length: n }, (_, i) => {
+      const v = first[i];
+      return Math.min(max, Math.max(min, v == null || Number.isNaN(v) ? lastSetOf(first) : v));
+    });
+    for (let i = 0; i < tl.length + future; i++) {
+      if (i > 0) {
+        if (vals.every(v => v >= max)) { if (stage < top) { stage++; vals = Array(n).fill(min); } }
+        else vals = raiseOne(vals, max, step);
+      }
+      const day = i < tl.length ? actual[i].day : actual[actual.length - 1].day + (i - tl.length + 1) * gap;
+      ideal.push({ i, day, stage, score: scoreOf(ex, stage, vals[n - 1]), future: i >= tl.length });
+    }
+  }
+  return { actual, ideal };
+}
+
+// ============================================================ CSV rows (any date range)
+const CSV_HEAD = ["Date", "Weekday", "Calendar Week", "Year", "Focus", "Exercise", "Group", "Level", "Variant", "Sets",
+  "Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6", "Total",
+  "Optimum Set 1", "Optimum Set 2", "Optimum Set 3", "Optimum Set 4", "Optimum Set 5", "Optimum Set 6", "Optimum Total",
+  "Delta vs Optimum", "Weakest Set", "Status", "Coach", "Progress Score", "Ideal Score", "Activity", "EMOM Reps per Minute", "EMOM Minutes Done"];
+
+function csvRows(from = "0000-00-00", to = "9999-99-99") {
+  const rows = [];
+  const dateCols = k => { const iso = isoWeek(k); return [k, weekdayOf(k), iso.week, iso.year]; };
+  for (const ex of EXERCISES) {
+    const tl = timeline(ex);
+    const ser = progressSeries(ex, 0);
+    const byDate = new Map(ser.actual.map(a => [a.k, a]));
+    const r2 = x => Math.round(x * 100) / 100;
+    tl.forEach((e, idx) => {
+      if (e.k < from || e.k > to || !e.logged) return;
+      const cells = Array.from({ length: 6 }, (_, i) => (Number.isNaN(e.reps[i]) || e.reps[i] == null ? "" : e.reps[i]));
+      const filled = cells.filter(v => v !== "");
+      const total = filled.reduce((a, b) => a + b, 0);
+      const c = coach(ex, tl, idx);
+      const opt = Array.from({ length: 6 }, (_, i) => (c && i < c.values.length ? c.values[i] : ""));
+      const optTotal = c ? c.values.reduce((a, b) => a + b, 0) : "";
+      rows.push({ k: e.k, o: EXERCISES.indexOf(ex), row: [
+        ...dateCols(e.k), FOCUS_LABEL[e.data.focus], ex.name, ex.group, e.stage, ladderOf(ex)[e.stage - 1], setsOf(ex, e.data),
+        ...cells, total, ...opt, optTotal, c ? total - optTotal : "", Math.min(...filled), e.status, c ? c.kind : "",
+        byDate.has(e.k) ? r2(byDate.get(e.k).score) : "", byDate.has(e.k) ? r2(ser.ideal[byDate.get(e.k).i].score) : "", e.data.activity, "", ""] });
+    });
+  }
+  // days on which the activity was done ("sport done")
+  for (const k of Object.keys(state.days)) {
+    const d = peekDay(k);
+    if (k < from || k > to || d.activity !== A_TODAY) continue;
+    const row = Array(CSV_HEAD.length).fill("");
+    row.splice(0, 4, ...dateCols(k));
+    row[CSV_HEAD.indexOf("Focus")] = FOCUS_LABEL[d.focus];
+    row[CSV_HEAD.indexOf("Exercise")] = state.activity.name;
+    row[CSV_HEAD.indexOf("Status")] = "Activity today";
+    row[CSV_HEAD.indexOf("Activity")] = d.activity;
+    rows.push({ k, o: -1, row });
+  }
+  // EMOM sessions
+  const col = n => CSV_HEAD.indexOf(n);
+  for (const e of state.emoms) {
+    if (e.date < from || e.date > to) continue;
+    [[e.exercise, e.reps, e.level], [e.exercise2, e.reps2, e.level2]].forEach(([name, reps, level], i) => {
+      const ex = name && EX[name];
+      if (!ex) return;
+      const row = Array(CSV_HEAD.length).fill("");
+      row.splice(0, 4, ...dateCols(e.date));
+      row[col("Focus")] = "EMOM"; row[col("Exercise")] = name; row[col("Group")] = ex.group;
+      row[col("Level")] = level ?? ""; row[col("Variant")] = level ? (ladderOf(ex)[level - 1] ?? "") : "";
+      row[col("Status")] = e.done >= e.minutes ? "EMOM complete" : "EMOM stopped";
+      row[col("EMOM Reps per Minute")] = reps; row[col("EMOM Minutes Done")] = e.done;
+      rows.push({ k: e.date, o: -0.5 + i * 0.1, row });
+    });
+  }
+  emCsvRows(from, to, dateCols, rows);
+  rows.sort((a, b) => (a.k < b.k ? -1 : a.k > b.k ? 1 : a.o - b.o));
+  return [CSV_HEAD, ...rows.map(r => r.row)];
+}
+
+// ============================================================ EMOM (every minute on the minute)
+// Method: pick an exercise, pick reps (1-10), repeat them at the start of every minute and rest for the
+// rest of the minute, for 10-60 minutes. Optional second exercise on the even minutes.
+const EMOM_TIMES = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60];
+const emomMaxReps = ex => (isHold(ex) ? 30 : 10);
+
+// where a running EMOM is, given the elapsed time
+function emomPhase(elapsedMs, minutes, alternate) {
+  const m = Math.floor(elapsedMs / 60000);
+  if (m >= minutes) return { finished: true, minute: minutes, secondsLeft: 0, which: 0 };
+  return { finished: false, minute: m + 1, secondsLeft: 60 - Math.floor((elapsedMs % 60000) / 1000), which: alternate ? m % 2 : 0 };
+}
+
+// progression order of the method: time first, reps second, a harder variation last
+function emomSuggest(ex) {
+  const last = state.emoms.filter(e => e.exercise === ex.name).slice(-1)[0];
+  const cap = emomMaxReps(ex);
+  if (!last) return { kind: "start", reps: Math.min(5, cap), minutes: 10, text: "First EMOM: choose reps you can repeat with clean form. Start with 5 for 10 minutes." };
+  if (last.done < last.minutes) return { kind: "repeat", reps: last.reps, minutes: last.minutes, text: `Finish the full ${last.minutes} minutes first: ${last.reps} per minute (last time ${last.done} minutes).` };
+  if (last.minutes < 60) return { kind: "time", reps: last.reps, minutes: Math.min(60, last.minutes + 5), text: `Increase time first: ${last.reps} per minute for ${Math.min(60, last.minutes + 5)} minutes (last: ${last.minutes}).` };
+  if (last.reps < cap) return { kind: "reps", reps: last.reps + 1, minutes: 20, text: `Time is maxed. Increase reps second: ${last.reps + 1} per minute, back to 20 minutes.` };
+  return { kind: "variation", reps: Math.min(5, cap), minutes: 20, text: "Time and reps are maxed. Choose a harder variation last (Harder level), then start again at 5 reps for 20 minutes." };
+}
+
+// ============================================================ UI
+const $ = id => document.getElementById(id);
+const CLS = { [ST_UP]: "up", [ST_ADD]: "mid", [ST_CHECK]: "low" };
+const actLabel = v => v === A_TODAY ? `${state.activity.name} today (sport done)` : v === A_NEXT ? `${state.activity.name} tomorrow` : `No ${state.activity.name}`;
+const groupsText = () => state.activity.groups.join(", ") || "no groups";
+const initials = name => (name.match(/[A-Za-z]+/g) || ["·"]).map(w => w[0].toUpperCase()).join("").slice(0, 2);
+const shortDate = k => fromKey(k).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+
+function render() {
+  const mon = mondayOf(viewDate), iso = isoWeek(viewDate);
+  $("weekLabel").textContent = `CW ${iso.week} · ${shortDate(mon)} – ${shortDate(addDays(mon, 6))} ${iso.year}`;
+
+  // week strip
+  const strip = $("days");
+  strip.innerHTML = "";
+  for (let i = 0; i < 7; i++) {
+    const k = addDays(mon, i), d = peekDay(k);
+    const tag = [FOCUS_SHORT[d.focus], d.activity === A_TODAY ? initials(state.activity.name) : ""].filter(Boolean).join(" ") || "·";
+    const b = document.createElement("button");
+    b.textContent = `${WEEKDAYS[i]}\n${fromKey(k).getDate()}\n${tag}`;
+    b.setAttribute("role", "tab");
+    b.setAttribute("aria-selected", String(k === viewDate));
+    if (k === todayKey()) b.classList.add("today");
+    b.onclick = () => { viewDate = k; render(); };
+    strip.append(b);
+  }
+
+  const data = peekDay(viewDate);
+  const panel = $("panel");
+  panel.innerHTML = "";
+
+  const head = document.createElement("p");
+  head.className = "dayhead";
+  head.textContent = fromKey(viewDate).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  panel.append(head);
+
+  // focus: free day / push / pull / full body
+  const fsel = document.createElement("select");
+  fsel.className = "mode";
+  fsel.setAttribute("aria-label", "Focus of this day");
+  Object.entries(FOCUS_LABEL).forEach(([v, l]) => fsel.add(new Option(l, v)));
+  fsel.value = data.focus;
+  fsel.onchange = () => { const d = ensureDay(viewDate); d.focus = fsel.value; d.tf = state.focus; save(); render(); };
+  panel.append(fsel);
+
+  // activity: none / today / tomorrow
+  const asel = document.createElement("select");
+  asel.className = "mode";
+  asel.setAttribute("aria-label", `${state.activity.name} today or tomorrow?`);
+  [A_NONE, A_TODAY, A_NEXT].forEach(v => asel.add(new Option(actLabel(v), v)));
+  asel.value = data.activity;
+  asel.onchange = () => { ensureDay(viewDate).activity = asel.value; save(); render(); };
+  panel.append(asel);
+
+  if (data.focus === "EMOM") { emDayPanel(panel, data); return; }
+
+  const all = slotsOf(data);
+  const shown = all.filter(x => !isSkipped(x.ex, data));
+  const note = document.createElement("p");
+  note.className = "note";
+  if (data.focus === F_NONE) {
+    note.textContent = data.activity === A_TODAY
+      ? `${state.activity.name} is logged as sport done for this day.`
+      : "Free day. Choose Push, Pull or Full Body to log a workout.";
+    panel.append(note);
+  } else if (data.activity !== A_NONE) {
+    note.textContent = shown.length < all.length
+      ? `${state.activity.name} trains ${groupsText()}, so those exercises are skipped.`
+      : `${state.activity.name} does not train any exercise of this workout, nothing is skipped.`;
+    panel.append(note);
+  }
+
+  shown.forEach(({ ex, ss }) => {
+    const tl = timeline(ex);
+    const idx = indexIn(tl, viewDate);
+    const cur = tl[idx];
+    const ladder = ladderOf(ex);
+    const stage = cur.stage;
+    const lastE = tl.slice(0, idx).filter(e => e.logged).pop();
+    const c = coach(ex, tl, idx);
+
+    const card = document.createElement("section");
+    card.className = "card";
+
+    const h = document.createElement("h2");
+    const t = document.createElement("span"); t.textContent = ex.name;
+    const u = document.createElement("span"); u.className = "variant";
+    u.textContent = `${ss ? "Superset " + ss + " · " : ""}${setsOf(ex, data)} × ${minOf(ex)}–${maxOf(ex)} ${ex.unit}`;
+    h.append(t, u);
+
+    const v = document.createElement("p");
+    v.className = "variant";
+    v.textContent = `Level ${stage} of ${ladder.length}: ${ladder[stage - 1]}`;
+    card.append(h, v);
+
+    if (lastE) {
+      const l = document.createElement("p");
+      l.className = "last";
+      const vals = lastE.reps.map(x => (Number.isNaN(x) ? "–" : x));
+      while (vals.length && vals[vals.length - 1] === "–") vals.pop();
+      const where = `${weekdayOf(lastE.k)} ${shortDate(lastE.k)}`;
+      l.textContent = lastE.stage === stage
+        ? `Last time (${where}): ${vals.join(" / ")} ${ex.unit}`
+        : `Last time (${where}, level ${lastE.stage}: ${ladder[lastE.stage - 1]}): ${vals.join(" / ")} ${ex.unit}`;
+      card.append(l);
+    }
+    // level control: change the level from this day on (start level and history stay as they are)
+    const top = maxStage(ex);
+    const lc = document.createElement("div");
+    lc.className = "btns";
+    lc.style.margin = "0 0 8px";
+    const down = document.createElement("button");
+    down.className = "small"; down.textContent = "Easier level"; down.disabled = stage <= 1;
+    down.onclick = () => { adjustLevel(ex, viewDate, -1); render(); };
+    const up = document.createElement("button");
+    up.className = "small"; up.textContent = "Harder level"; up.disabled = stage >= top;
+    up.onclick = () => { adjustLevel(ex, viewDate, 1); render(); };
+    lc.append(down, up);
+    const shiftNow = levelShiftAt(ex, viewDate);
+    if (shiftNow) {
+      const note = document.createElement("span");
+      note.className = "last";
+      note.style.alignSelf = "center";
+      note.textContent = `changed by you: ${shiftNow > 0 ? "+" : ""}${shiftNow}`;
+      lc.append(note);
+    }
+    card.append(lc);
+
+    if (c) {
+      const tg = document.createElement("p"); tg.className = "target"; tg.textContent = c.text;
+      const why = document.createElement("p"); why.className = "why"; why.textContent = c.why;
+      card.append(tg, why);
+      if (c.jump && stage < top) {
+        const btn = document.createElement("button");
+        btn.className = "small"; btn.textContent = "Take the next level now";
+        btn.onclick = () => { adjustLevel(ex, viewDate, 1); render(); };
+        card.append(btn);
+      }
+      if (c.kind === "base" && stage > 1) {
+        const btn = document.createElement("button");
+        btn.className = "small"; btn.textContent = "Go one level easier";
+        btn.onclick = () => { adjustLevel(ex, viewDate, -1); render(); };
+        card.append(btn);
+      }
+    }
+
+    const row = document.createElement("div");
+    row.className = "row";
+    row.style.marginTop = "10px";
+    const lab = document.createElement("label"); lab.textContent = "Sets";
+    const setSel = document.createElement("select");
+    setSel.setAttribute("aria-label", "Number of sets " + ex.name);
+    [2, 3, 4, 5, 6].forEach(n => setSel.add(new Option(n, n)));
+    setSel.value = setsOf(ex, data);
+    setSel.onchange = () => { setCfg(ex, "sets", Number(setSel.value)); render(); };
+    row.append(lab, setSel);
+
+    const grid = document.createElement("div");
+    grid.className = "sets";
+    const st = document.createElement("p");
+    for (let i = 0; i < 6; i++) {
+      const inp = document.createElement("input");
+      inp.type = "number"; inp.inputMode = "numeric"; inp.min = 0;
+      inp.placeholder = c && c.values[i] != null ? String(c.values[i]) : "Set " + (i + 1);
+      inp.setAttribute("aria-label", `${ex.name} set ${i + 1}`);
+      inp.value = (data.reps[ex.name] || [])[i] ?? "";
+      inp.disabled = i >= setsOf(ex, data);
+      inp.oninput = () => {
+        const d = ensureDay(viewDate);
+        (d.reps[ex.name] ||= [])[i] = inp.value;
+        save();
+        updateStatus(ex, st);
+      };
+      grid.append(inp);
+    }
+    st.className = "status " + (CLS[cur.status] || "");
+    st.textContent = cur.status;
+    card.append(row, grid, st);
+    panel.append(card);
+  });
+
+  if (data.focus === "Full") {
+    const card = document.createElement("section");
+    card.className = "card";
+    const h = document.createElement("h2"); h.textContent = "Stretching";
+    const p = document.createElement("p");
+    p.className = "variant";
+    p.textContent = "2 × 30 s forward fold · 30 s frog stretch · 2 × 30–60 s wall split / middle split";
+    const lab = document.createElement("label");
+    lab.className = "row";
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = data.stretch; cb.style.minHeight = "0"; cb.style.width = "20px";
+    cb.onchange = () => { ensureDay(viewDate).stretch = cb.checked; save(); };
+    lab.append(cb, document.createTextNode("Done"));
+    card.append(h, p, lab);
+    panel.append(card);
+  }
+}
+
+// update only the status line, so the keyboard stays open while typing
+function updateStatus(ex, el) {
+  const s = statusOf(ex, peekDay(viewDate));
+  el.textContent = s;
+  el.className = "status " + (CLS[s] || "");
+}
+
+// ============================================================ Progress view
+let progressEx = null;
+const f1 = x => (Math.round(x * 10) / 10).toFixed(1);
+
+function drawChart(host, series, ex) {
+  host.innerHTML = "";
+  const { actual, ideal } = series;
+  if (!actual.length) {
+    const p = document.createElement("p");
+    p.className = "note";
+    p.textContent = "No sessions logged for this exercise yet.";
+    host.append(p);
+    return;
+  }
+  const NS = "http://www.w3.org/2000/svg";
+  const W = 360, H = 230, L = 44, R = 14, T = 16, B = 40;
+  const el = (name, attrs = {}, text) => {
+    const n = document.createElementNS(NS, name);
+    for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+    if (text != null) n.textContent = text;
+    return n;
+  };
+  // y: level plus last-set position, x: calendar date
+  const scores = [...actual.map(p => p.score), ...ideal.map(p => p.score)];
+  let lo = Math.floor(Math.min(...scores)), hi = Math.ceil(Math.max(...scores));
+  if (hi - lo < 1) hi = lo + 1;
+  const d0 = actual[0].day, d1 = ideal[ideal.length - 1].day, span = Math.max(1, d1 - d0);
+  const x = day => L + ((day - d0) / span) * (W - L - R);
+  const y = v => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `Progress chart for ${ex.name}` });
+
+  // grid: every whole number is the start of a level
+  const every = Math.max(1, Math.ceil((hi - lo) / 6));
+  for (let v = lo; v <= hi; v += every) {
+    svg.append(el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), style: "stroke: var(--line); stroke-width: 1" }));
+    svg.append(el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end", style: "fill: var(--muted); font-size: 10px" }, `Lv ${v + 1}`));
+  }
+  // dates under the axis
+  const dayKey = day => addDays(actual[0].k, day - d0);
+  const label = (day, anchor, text) => svg.append(el("text", { x: x(day), y: H - 14, "text-anchor": anchor, style: "fill: var(--muted); font-size: 10px" }, text));
+  label(d0, "start", shortDate(actual[0].k));
+  const lastActual = actual[actual.length - 1];
+  if (x(lastActual.day) - x(d0) > 70 && x(d1) - x(lastActual.day) > 70) label(lastActual.day, "middle", shortDate(lastActual.k));
+  label(d1, "end", shortDate(dayKey(d1)));
+
+  const pts = arr => arr.map(p => `${x(p.day).toFixed(1)},${y(p.score).toFixed(1)}`).join(" ");
+  const idealPast = ideal.filter(p => !p.future);
+  const idealFuture = ideal.filter(p => p.future || p.i === actual.length - 1);
+  if (idealPast.length > 1) svg.append(el("polyline", { points: pts(idealPast), fill: "none", style: "stroke: var(--ok); stroke-width: 2; stroke-dasharray: 6 4" }));
+  if (idealFuture.length > 1) svg.append(el("polyline", { points: pts(idealFuture), fill: "none", style: "stroke: var(--ok); stroke-width: 2; stroke-dasharray: 2 4" }));
+  if (actual.length > 1) svg.append(el("polyline", { points: pts(actual), fill: "none", style: "stroke: var(--accent); stroke-width: 2.5" }));
+  actual.forEach(p => svg.append(el("circle", { cx: x(p.day), cy: y(p.score), r: 3.5, style: "fill: var(--accent)" })));
+  host.append(svg);
+}
+
+function renderProgress() {
+  const sel = $("exSel");
+  sel.innerHTML = "";
+  EXERCISES.forEach(ex => sel.add(new Option(ex.name, ex.name)));
+  if (!progressEx) progressEx = (EXERCISES.find(e => timeline(e).some(t => t.logged)) || EXERCISES[0]).name;
+  sel.value = progressEx;
+
+  const ex = EX[progressEx];
+  const series = progressSeries(ex);
+  drawChart($("chart"), series, ex);
+
+  const stats = $("stats");
+  stats.innerHTML = "";
+  const add = t => { const p = document.createElement("p"); p.className = "stat"; p.textContent = t; stats.append(p); };
+  const { actual, ideal } = series;
+  if (actual.length) {
+    const a = actual[actual.length - 1], idl = ideal[actual.length - 1];
+    const gap = a.score - idl.score;
+    const vals = a.reps.filter(v => !Number.isNaN(v)).join(" / ");
+    add(`Latest (${weekdayOf(a.k)} ${shortDate(a.k)}): level ${a.stage}, ${vals} ${ex.unit}`);
+    const f = actual[0];
+    add(`Level progress: level ${f.stage} on ${shortDate(f.k)} → level ${a.stage} (${a.stage - f.stage >= 0 ? "+" : ""}${a.stage - f.stage} levels)`);
+    add(`Score ${f1(a.score)} · ideal ${f1(idl.score)} · ${gap >= 0 ? "ahead by" : "behind by"} ${f1(Math.abs(gap))} levels`);
+    add(`Sessions logged: ${actual.length}. Ideal in 3 sessions: level ${ideal[ideal.length - 1].stage} (score ${f1(ideal[ideal.length - 1].score)}).`);
+  }
+}
+
+// ============================================================ EMOM view
+let emom = null;            // running session
+let emomTimer = null;
+let audioCtx = null;
+let emomSetup = null;       // { ex1, ex2, reps1, reps2, minutes }
+
+function beep(freq = 880, ms = 160) {
+  try {
+    audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = freq; g.gain.value = 0.15;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + ms / 1000);
+  } catch (e) { /* sound not available */ }
+}
+
+function emomDefaults(name) {
+  const sug = emomSuggest(EX[name]);
+  return { reps: sug.reps, minutes: sug.minutes };
+}
+
+function renderEmom() {
+  const box = $("emomBody");
+  box.innerHTML = "";
+  if (emom) return renderEmomRun(box);
+
+  if (!emomSetup) {
+    const name = EX["Pull-up"].name;
+    emomSetup = Object.assign({ ex1: name, ex2: "" }, { reps1: 0, reps2: 5, minutes: 10 });
+    const d = emomDefaults(name); emomSetup.reps1 = d.reps; emomSetup.minutes = d.minutes;
+  }
+  const S = emomSetup, ex1 = EX[S.ex1];
+  const card = document.createElement("section");
+  card.className = "card";
+  const intro = document.createElement("p");
+  intro.className = "note";
+  intro.textContent = "Every minute on the minute: do your reps at the start of the minute, rest for the rest of it. Increase time first, reps second, a harder variation last.";
+  card.append(intro);
+
+  const exSelect = (value, none) => {
+    const sel = document.createElement("select");
+    sel.className = "mode";
+    if (none) sel.add(new Option("None (single exercise)", ""));
+    EXERCISES.forEach(e => sel.add(new Option(`${e.group}: ${e.name}`, e.name)));
+    sel.value = value;
+    return sel;
+  };
+  const label = t => { const l = document.createElement("label"); l.className = "note"; l.textContent = t; return l; };
+  const numInput = (value, min, max, onChange) => {
+    const i = document.createElement("input");
+    i.type = "number"; i.inputMode = "numeric"; i.min = min; i.max = max; i.value = value; i.className = "field";
+    i.onchange = () => onChange(Math.min(max, Math.max(min, Number(i.value) || min)));
+    return i;
+  };
+
+  card.append(label("Exercise"));
+  const s1 = exSelect(S.ex1, false);
+  s1.onchange = () => { S.ex1 = s1.value; const d = emomDefaults(S.ex1); S.reps1 = d.reps; S.minutes = d.minutes; renderEmom(); };
+  card.append(s1);
+
+  const stage = timeline(ex1).final;
+  const lv = document.createElement("p");
+  lv.className = "variant";
+  lv.textContent = `Level ${stage} of ${maxStage(ex1)}: ${ladderOf(ex1)[stage - 1]}`;
+  card.append(lv);
+  const lc = document.createElement("div");
+  lc.className = "btns"; lc.style.margin = "0 0 10px";
+  const dn = document.createElement("button"); dn.className = "small"; dn.textContent = "Easier level"; dn.disabled = stage <= 1;
+  dn.onclick = () => { adjustLevel(ex1, todayKey(), -1); renderEmom(); };
+  const upb = document.createElement("button"); upb.className = "small"; upb.textContent = "Harder level"; upb.disabled = stage >= maxStage(ex1);
+  upb.onclick = () => { adjustLevel(ex1, todayKey(), 1); renderEmom(); };
+  lc.append(dn, upb);
+  card.append(lc);
+
+  card.append(label(`Reps per minute (1–${emomMaxReps(ex1)}${isHold(ex1) ? ", seconds" : ""})`));
+  card.append(numInput(S.reps1, 1, emomMaxReps(ex1), v => { S.reps1 = v; renderEmom(); }));
+
+  card.append(label("Second exercise on the even minutes (optional)"));
+  const s2 = exSelect(S.ex2, true);
+  s2.onchange = () => { S.ex2 = s2.value; renderEmom(); };
+  card.append(s2);
+  if (S.ex2) {
+    const ex2 = EX[S.ex2];
+    card.append(label(`Reps per minute for ${ex2.name} (1–${emomMaxReps(ex2)})`));
+    card.append(numInput(Math.min(S.reps2, emomMaxReps(ex2)), 1, emomMaxReps(ex2), v => { S.reps2 = v; renderEmom(); }));
+  }
+
+  card.append(label("Duration"));
+  const ms = document.createElement("select");
+  ms.className = "mode";
+  EMOM_TIMES.forEach(m => ms.add(new Option(`${m} minutes`, m)));
+  ms.value = S.minutes;
+  ms.onchange = () => { S.minutes = Number(ms.value); renderEmom(); };
+  card.append(ms);
+
+  const sug = emomSuggest(ex1);
+  const tg = document.createElement("p"); tg.className = "target"; tg.textContent = sug.text;
+  card.append(tg);
+  const use = document.createElement("button");
+  use.className = "small"; use.textContent = "Use suggestion";
+  use.onclick = () => { S.reps1 = sug.reps; S.minutes = sug.minutes; renderEmom(); };
+  card.append(use);
+
+  const start = document.createElement("button");
+  start.className = "primary"; start.style.width = "100%"; start.style.marginTop = "12px";
+  start.textContent = `Start ${S.minutes} minutes`;
+  start.onclick = startEmom;
+  card.append(start);
+  box.append(card);
+
+  // history
+  const hist = state.emoms.slice(-6).reverse();
+  if (hist.length) {
+    const h = document.createElement("h3"); h.textContent = "Recent EMOMs";
+    box.append(h);
+    hist.forEach(e => {
+      const p = document.createElement("p");
+      p.className = "stat";
+      const pair = e.exercise2 ? ` + ${e.exercise2} (${e.reps2})` : "";
+      p.textContent = `${weekdayOf(e.date)} ${shortDate(e.date)}: ${e.exercise} ${e.reps}/min${pair}, ${e.done} of ${e.minutes} min`;
+      box.append(p);
+    });
+  }
+}
+
+function startEmom() {
+  const S = emomSetup;
+  const ex1 = EX[S.ex1], ex2 = S.ex2 ? EX[S.ex2] : null;
+  beep(660, 120);   // the first sound needs this tap
+  emom = { ex1, ex2, reps1: S.reps1, reps2: Math.min(S.reps2, ex2 ? emomMaxReps(ex2) : 99), minutes: S.minutes,
+           level1: timeline(ex1).final, level2: ex2 ? timeline(ex2).final : null,
+           startTs: Date.now(), pausedAt: null, pausedMs: 0, lastMinute: 0, finished: false, done: 0 };
+  try { navigator.wakeLock?.request("screen").then(l => { if (emom) emom.lock = l; }).catch(() => {}); } catch (e) { /* no wake lock */ }
+  clearInterval(emomTimer);
+  emomTimer = setInterval(emomTick, 250);
+  renderEmom();
+  emomTick();
+}
+
+function emomElapsed() {
+  return (emom.pausedAt ?? Date.now()) - emom.startTs - emom.pausedMs;
+}
+
+function emomTick() {
+  if (!emom || emom.finished || emom.pausedAt) return;
+  const ph = emomPhase(emomElapsed(), emom.minutes, !!emom.ex2);
+  if (ph.finished) { endEmom(emom.minutes); return; }
+  if (ph.minute !== emom.lastMinute) { emom.lastMinute = ph.minute; beep(); }
+  const E = emom.els;
+  if (!E) return;
+  const ex = ph.which === 0 ? emom.ex1 : emom.ex2, reps = ph.which === 0 ? emom.reps1 : emom.reps2;
+  const lvl = ph.which === 0 ? emom.level1 : emom.level2;
+  E.minute.textContent = `Minute ${ph.minute} of ${emom.minutes}`;
+  E.left.textContent = `${ph.secondsLeft}s`;
+  E.doNow.textContent = `${reps} × ${ex.name}`;
+  E.variant.textContent = ladderOf(ex)[lvl - 1];
+  E.bar.style.width = `${(emomElapsed() / (emom.minutes * 60000)) * 100}%`;
+}
+
+function endEmom(done) {
+  if (!emom || emom.finished) return;
+  clearInterval(emomTimer);
+  emom.finished = true;
+  emom.done = Math.min(emom.minutes, done);
+  if (emom.lock) { try { emom.lock.release(); } catch (e) { /* ignore */ } }
+  beep(988, 200); setTimeout(() => beep(988, 200), 300); setTimeout(() => beep(1175, 350), 600);
+  renderEmom();
+}
+
+function renderEmomRun(box) {
+  const card = document.createElement("section");
+  card.className = "card";
+  if (emom.finished) {
+    const h = document.createElement("h2"); h.textContent = `Done: ${emom.done} of ${emom.minutes} minutes`;
+    const p = document.createElement("p");
+    p.className = "variant";
+    p.textContent = `${emom.reps1} × ${emom.ex1.name}${emom.ex2 ? ` and ${emom.reps2} × ${emom.ex2.name}` : ""} every minute.`;
+    const save = document.createElement("button");
+    save.className = "primary"; save.style.width = "100%"; save.textContent = "Save EMOM";
+    save.onclick = () => {
+      const e = { date: todayKey(), exercise: emom.ex1.name, reps: emom.reps1, level: emom.level1, minutes: emom.minutes, done: emom.done };
+      if (emom.ex2) Object.assign(e, { exercise2: emom.ex2.name, reps2: emom.reps2, level2: emom.level2 });
+      state.emoms.push(e); save();
+      emom = null; renderEmom();
+    };
+    const discard = document.createElement("button");
+    discard.style.width = "100%"; discard.style.marginTop = "8px"; discard.textContent = "Discard";
+    discard.onclick = () => { emom = null; renderEmom(); };
+    card.append(h, p, save, discard);
+    box.append(card);
+    return;
+  }
+  const mk = (cls, tag = "p") => { const e = document.createElement(tag); e.className = cls; card.append(e); return e; };
+  const minute = mk("variant"), left = mk("big"), doNow = mk("big"), variant = mk("variant");
+  doNow.style.fontSize = "1.4rem"; variant.style.textAlign = "center";
+  const bar = document.createElement("div"); bar.className = "bar";
+  const fill = document.createElement("i"); bar.append(fill); card.append(bar);
+  emom.els = { minute, left, doNow, variant, bar: fill };
+  const row = document.createElement("div");
+  row.className = "btns";
+  const pause = document.createElement("button");
+  pause.textContent = emom.pausedAt ? "Resume" : "Pause";
+  pause.onclick = () => {
+    if (emom.pausedAt) { emom.pausedMs += Date.now() - emom.pausedAt; emom.pausedAt = null; }
+    else emom.pausedAt = Date.now();
+    renderEmom();
+  };
+  const stop = document.createElement("button");
+  stop.textContent = "Stop and save progress";
+  stop.onclick = () => endEmom(Math.floor(emomElapsed() / 60000));
+  row.append(pause, stop);
+  card.append(row);
+  box.append(card);
+  emomTick();
+}
+
+// ============================================================ Settings
+function numberField(label, value, attrs, onChange) {
+  const wrap = document.createElement("div");
+  const l = document.createElement("label"); l.textContent = label;
+  const i = document.createElement("input");
+  i.type = "number"; i.inputMode = "numeric"; Object.assign(i, attrs); i.value = value;
+  i.onchange = () => onChange(i);
+  wrap.append(l, i);
+  return wrap;
+}
+
+function buildEditor(ex, body) {
+  body.innerHTML = "";
+  const cfg = document.createElement("div");
+  cfg.className = "cfg";
+
+  const wrapSets = document.createElement("div");
+  const ls = document.createElement("label"); ls.textContent = "Sets";
+  const ss = document.createElement("select");
+  [2, 3, 4, 5, 6].forEach(n => ss.add(new Option(n, n)));
+  ss.value = setsOf(ex);
+  ss.onchange = () => setCfg(ex, "sets", Number(ss.value));
+  wrapSets.append(ls, ss);
+
+  const clamp = (i, lo, hi) => Math.min(hi, Math.max(lo, Number(i.value) || lo));
+  cfg.append(
+    wrapSets,
+    numberField("Min reps", minOf(ex), { min: 1, max: 99 }, i => { const n = clamp(i, 1, 99); i.value = n; setCfg(ex, "min", n); }),
+    numberField("Max reps", maxOf(ex), { min: 1, max: 99 }, i => { const n = clamp(i, 1, 99); i.value = n; setCfg(ex, "max", n); }),
+    numberField("Start level", startOf(ex), { min: 1 }, i => { const n = clamp(i, 1, maxStage(ex)); i.value = n; setCfg(ex, "start", n); })
+  );
+
+  const list = document.createElement("div");
+  const draw = () => {
+    list.innerHTML = "";
+    const arr = state.ladders[ex.name] ?? DEFAULT_LADDERS[ex.name];
+    const slotsN = Math.max(20, arr.length);
+    for (let i = 0; i < slotsN; i++) {
+      const row = document.createElement("div");
+      row.className = "step";
+      const n = document.createElement("span"); n.textContent = i + 1;
+      const inp = document.createElement("input");
+      inp.type = "text"; inp.value = arr[i] ?? ""; inp.placeholder = "empty";
+      inp.setAttribute("aria-label", `${ex.name} level ${i + 1}`);
+      inp.oninput = () => {
+        const a = (state.ladders[ex.name] ||= DEFAULT_LADDERS[ex.name].slice());
+        while (a.length <= i) a.push("");
+        a[i] = inp.value;
+        save();
+      };
+      row.append(n, inp);
+      list.append(row);
+    }
+  };
+  draw();
+
+  const btns = document.createElement("div");
+  btns.className = "btns";
+  const add = document.createElement("button");
+  add.textContent = "Add level";
+  add.onclick = () => {
+    const a = (state.ladders[ex.name] ||= DEFAULT_LADDERS[ex.name].slice());
+    const target = Math.max(20, a.length) + 1;
+    while (a.length < target) a.push("");
+    save(); draw();
+  };
+  const reset = document.createElement("button");
+  reset.textContent = "Restore defaults";
+  reset.onclick = () => {
+    if (!confirm("Reset the ladder for " + ex.name + " to the defaults?")) return;
+    delete state.ladders[ex.name]; save(); draw();
+  };
+  btns.append(add, reset);
+  body.append(cfg, list, btns);
+}
+
+function renderSettings() {
+  $("experience").value = state.experience;
+  $("phase").value = state.phase;
+  $("focus").value = state.focus;
+  $("actName").value = state.activity.name;
+  const box = $("actGroups");
+  box.innerHTML = "";
+  GROUPS.forEach(g => {
+    const l = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = state.activity.groups.includes(g);
+    cb.onchange = () => {
+      const set = new Set(state.activity.groups);
+      cb.checked ? set.add(g) : set.delete(g);
+      state.activity.groups = GROUPS.filter(x => set.has(x));
+      save();
+    };
+    l.append(cb, document.createTextNode(g));
+    box.append(l);
+  });
+
+  const list = $("exList");
+  list.innerHTML = "";
+  exercisesOfFocus(state.focus).forEach(ex => {
+    const d = document.createElement("details");
+    const s = document.createElement("summary"); s.textContent = `${ex.group}: ${ex.name}`;
+    const body = document.createElement("div"); body.className = "body";
+    d.append(s, body);
+    d.addEventListener("toggle", () => { if (d.open && !d.dataset.built) { d.dataset.built = "1"; buildEditor(ex, body); } });
+    list.append(d);
+  });
+}
+
+function show(view) {
+  $("logView").hidden = view !== "log";
+  $("settingsView").hidden = view !== "settings";
+  $("progressView").hidden = view !== "progress";
+  $("emomView").hidden = view !== "emom";
+  window.scrollTo(0, 0);
+  if (view === "settings") renderSettings();
+  else if (view === "progress") renderProgress();
+  else if (view === "emom") renderEmom();
+  else render();
+}
+
+// ============================================================ Export and backup
+const esc = v => { const s = String(v ?? ""); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+
+function download(name, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+const toCsv = rows => "\ufeff" + rows.map(r => r.map(esc).join(";")).join("\n");
+
+// ============================================================ Events
+$("prev").onclick = () => { viewDate = addDays(viewDate, -7); render(); };
+$("next").onclick = () => { viewDate = addDays(viewDate, 7); render(); };
+$("todayBtn").onclick = () => { viewDate = todayKey(); render(); };
+$("settingsBtn").onclick = () => show("settings");
+$("progressBtn").onclick = () => show("progress");
+$("backE").onclick = () => show("log");
+$("backP").onclick = () => show("log");
+$("exSel").onchange = () => { progressEx = $("exSel").value; renderProgress(); };
+$("back").onclick = () => show("log");
+$("phase").onchange = () => { state.phase = $("phase").value === "strength" ? "strength" : "hypertrophy"; save(); };
+$("experience").onchange = () => { state.experience = $("experience").value; save(); renderSettings(); };
+$("focus").onchange = () => { state.focus = $("focus").value === "lower" ? "lower" : "upper"; save(); renderSettings(); };
+$("actName").onchange = () => { state.activity.name = $("actName").value.trim() || "Activity"; save(); };
+
+$("exportCsv").onclick = () => {
+  const from = $("from").value, to = $("to").value;
+  const name = from || to ? `progression_${from || "start"}_${to || "end"}.csv` : "progression_all.csv";
+  download(name, toCsv(csvRows(from || undefined, to || undefined)), "text/csv");
+};
+$("exportJson").onclick = () =>
+  download("progression-backup.json", JSON.stringify(state, null, 2), "application/json");
+$("importJson").onclick = () => $("file").click();
+$("file").onchange = async () => {
+  const f = $("file").files[0];
+  if (!f) return;
+  try {
+    const data = normalize(JSON.parse(await f.text()));
+    if (!data) throw new Error("not a backup");
+    state = data;
+    save(); render();
+  } catch (e) {
+    alert("This file is not a valid backup.");
+  }
+  $("file").value = "";
+};
+
+// ============================================================ EMOM days (calendar mode, no timer)
+// A day with the focus "EMOM" logs EMOM blocks: reps per minute and the minutes you managed (of the planned 10 or 20).
+// Everything lives in the same calendar, export and progress view as the set-based training.
+const EM_LADDER = {
+  "Dips": "Dips", "Push-ups": "Planche Push-up Progression", "Pike Push-ups": "Pike / Handstand Push-up Progression",
+  "Pull-ups": "Pull-up", "Rows": "Row / FL Pull-up", "Goblet Squat": "Squat Progression", "RDL": "Hip Hinge / RDL Progression",
+  "Ab Wheel": "Core Pull (Ab Wheel)", "Lying Leg Raises": "Lying Leg Raises"
+};
+DEFAULT_LADDERS["Lying Leg Raises"] = [
+  "Lying Knee Raises", "Lying Knee Raises, 1 s Pause at Top", "Lying Leg Raises, Knees Bent",
+  "Lying Leg Raises, Straight Legs", "Lying Leg Raises, Straight Legs, 1 s Pause at Top",
+  "Lying Leg Raises, Straight Legs, 3 s Lowering",
+  "Lying Leg Raises with 2.5 kg Dumbbell Between Feet", "Lying Leg Raises with 7.5 kg Dumbbell Between Feet"
+];
+// default plans per EMOM type (same names as the muscle groups). Each option: [exercise, planned minutes]. Editable in Settings.
+const EM_PLANS = {
+  Push: [{ blocks: [["Dips", 10], ["Push-ups", 10]] }, { blocks: [["Pike Push-ups", 20]] }],
+  Pull: [{ blocks: [["Pull-ups", 20]] }, { blocks: [["Rows", 20]] }],
+  Legs: [{ blocks: [["Goblet Squat", 10], ["RDL", 10]] }],
+  Core: [{ blocks: [["Ab Wheel", 10], ["Lying Leg Raises", 10]] }]
+};
+const EM_TYPES = Object.keys(EM_PLANS);
+const emClone = o => JSON.parse(JSON.stringify(o));
+const emPlanLabel = p => p.blocks.map(([m, min]) => `${m} ${min}`).join(" + ");
+const emRange = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+
+function emS() { return (state.em ||= { levels: {}, start: {}, plans: null }); }
+function emPlans(type) {
+  const e = emS();
+  e.plans ||= emClone(EM_PLANS);
+  return e.plans[type] && e.plans[type].length ? e.plans[type] : EM_PLANS[type];
+}
+function emLadder(move) {
+  const key = EM_LADDER[move];
+  const l = (state.ladders[key] ?? DEFAULT_LADDERS[key]).map(s => String(s ?? "").trim()).filter(Boolean);
+  return l.length ? l : ["(no level defined)"];
+}
+const emLevel = move => Math.min(Math.max(emS().levels[move] ?? 1, 1), emLadder(move).length);
+const emSetLevel = (move, n) => { emS().levels[move] = Math.min(Math.max(n, 1), emLadder(move).length); save(); };
+
+// every logged block of one exercise, oldest first. reps = reps per minute, done = minutes managed, minutes = planned
+function emHistory(move) {
   const out = [];
   for (const k of Object.keys(state.days).sort()) {
-    state.days[k].sessions.forEach((s, si) => s.blocks.forEach(b => { if (b.move === move) out.push({ ...b, k, type: s.type, si }); }));
+    (state.days[k].emom || []).forEach((s, si) => s.blocks.forEach(b => { if (b.move === move) out.push({ ...b, k, type: s.type, si }); }));
   }
   return out;
 }
 
-// Next target. Same reps per minute, one more minute than last time. When all planned minutes are done,
-// one more rep per minute, with about the same total reps. At 10 reps: a harder variation.
-function suggest(move, planned) {
-  const last = history(move).pop(), lvl = levelOf(move);
+// Next target: same reps per minute and one more minute than last time. All planned minutes done: one more rep per
+// minute with about the same total reps. At 10 reps: a harder variation.
+function emSug(move, planned) {
+  const last = emHistory(move).pop(), lvl = emLevel(move);
   if (!last) return { reps: 5, minutes: planned, why: "First EMOM with this exercise: pick reps per minute you can repeat and log the minutes you manage." };
   const half = Math.max(1, Math.ceil(planned / 2));
   if (last.level !== lvl) return { reps: 5, minutes: half, why: lvl > last.level ? "New level: start at 5 reps per minute and build the minutes up again." : "Easier level: rebuild from 5 reps per minute." };
@@ -318,9 +1600,9 @@ function suggest(move, planned) {
   return { reps: 5, minutes: half, levelUp: true, why: `All ${planned} minutes at 10 reps: take the next level and rebuild from 5 reps.` };
 }
 
-// actual: every logged block. ideal: the path from the first block if every session reached its target, plus `future` sessions
-function progressSeries(move, future = 3) {
-  const hist = history(move);
+// actual: every logged block. ideal: the path if every session reached its target, plus `future` more sessions
+function emSeries(move, future = 3) {
+  const hist = emHistory(move);
   const actual = hist.map((b, i) => ({ i, k: b.k, day: dayNum(b.k), total: b.reps * b.done, reps: b.reps, done: b.done, level: b.level, planned: b.minutes }));
   const ideal = [];
   if (hist.length) {
@@ -328,7 +1610,7 @@ function progressSeries(move, future = 3) {
     const gap = Math.max(2, Math.round(gaps.length ? gaps.reduce((a, b) => a + b, 0) / gaps.length : 4));
     let reps = hist[0].reps, done = hist[0].done;
     for (let i = 0; i < hist.length + future; i++) {
-      const planned = (hist[Math.min(i, hist.length - 1)]).minutes;
+      const planned = hist[Math.min(i, hist.length - 1)].minutes;
       if (i > 0) {
         if (done < planned) done++;
         else if (reps < 10) { reps++; done = Math.max(1, Math.ceil(planned * (reps - 1) / reps)); }
@@ -340,28 +1622,8 @@ function progressSeries(move, future = 3) {
   return { actual, ideal };
 }
 
-// ============================================================ CSV
-const CSV_HEAD = ["Date", "Weekday", "Calendar Week", "Year", "Day Type", "Plan", "Exercise", "Level", "Variant",
-  "Reps per Minute", "Minutes Planned", "Minutes Done", "Total Reps",
-  "Target Reps per Minute", "Target Minutes", "Target Total", "Delta vs Target", "Sport"];
-function csvRows(from = "0000-00-00", to = "9999-99-99") {
-  const rows = [];
-  for (const k of Object.keys(state.days).sort()) {
-    if (k < from || k > to) continue;
-    const iso = isoWeek(k), d = state.days[k], dc = [k, weekdayOf(k), iso.week, iso.year];
-    d.sessions.forEach(s => s.blocks.forEach(b => {
-      const tg = b.target, total = b.reps * b.done, tt = tg ? tg.reps * tg.minutes : "";
-      rows.push([...dc, s.type, s.plan, b.move, b.level, ladderOf(b.move)[b.level - 1] || "", b.reps, b.minutes, b.done, total,
-        tg ? tg.reps : "", tg ? tg.minutes : "", tt, tg ? total - tt : "", d.sport ? "yes" : ""]);
-    }));
-    if (d.sport) rows.push([...dc, "Sport", "", "", "", "", "", "", "", "", "", "", "", "", "yes"]);
-  }
-  return [CSV_HEAD, ...rows];
-}
-
-// ============================================================ UI helpers
-const $ = id => document.getElementById(id);
-function h(tag, props = {}, ...kids) {
+// ---- small DOM helpers (prefixed so they cannot clash with the rest of the app)
+function emH(tag, props = {}, ...kids) {
   const e = document.createElement(tag);
   for (const [k, v] of Object.entries(props)) {
     if (k === "class") e.className = v;
@@ -373,102 +1635,107 @@ function h(tag, props = {}, ...kids) {
   kids.flat().forEach(c => e.append(typeof c === "object" && c !== null ? c : document.createTextNode(String(c))));
   return e;
 }
-const sel = (opts, value, onchange, label) => {
-  const s = h("select", { "aria-label": label || "" }, opts.map(([v, l]) => h("option", { value: v }, l)));
+const emSel = (opts, value, onchange, label) => {
+  const s = emH("select", { "aria-label": label || "" }, opts.map(([v, l]) => emH("option", { value: v }, l)));
   s.value = String(value); s.onchange = () => onchange(s.value);
   return s;
 };
-const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
-let view = todayKey();
-let setup = null;   // { type, opt, blocks: [{ move, minutes, reps, done, target, levelUp }] }
 
-function buildSetup(type, opt) {
-  const plan = plansOf(type)[opt] || plansOf(type)[0];
-  return { type, opt: plansOf(type).indexOf(plan), blocks: plan.blocks.map(([move, minutes]) => {
-    const sg = suggest(move, minutes);
+let emSetup = null, emSetupDate = null;   // { type, opt, blocks: [{ move, minutes, reps, done, target }] }
+function emBuild(type, opt) {
+  const plans = emPlans(type), plan = plans[opt] || plans[0];
+  return { type, opt: plans.indexOf(plan), blocks: plan.blocks.map(([move, minutes]) => {
+    const sg = emSug(move, minutes);
     return { move, minutes, reps: sg.reps, done: sg.minutes, target: { reps: sg.reps, minutes: sg.minutes } };
   }) };
 }
-function refreshBlock(bi) {
-  const b = setup.blocks[bi], sg = suggest(b.move, b.minutes);
+function emRefresh(bi) {
+  const b = emSetup.blocks[bi], sg = emSug(b.move, b.minutes);
   Object.assign(b, { reps: sg.reps, done: sg.minutes, target: { reps: sg.reps, minutes: sg.minutes } });
 }
 
-// ============================================================ Home: log a workout
-function renderHome() {
-  const mon = mondayOf(view), iso = isoWeek(view);
-  $("weekLabel").textContent = `CW ${iso.week} · ${shortDate(mon)} – ${shortDate(addDays(mon, 6))} ${iso.year}`;
-  const strip = $("days"); strip.innerHTML = "";
-  for (let i = 0; i < 7; i++) {
-    const k = addDays(mon, i), d = dayOf(k);
-    const tag = [...new Set(d.sessions.map(s => s.type.slice(0, 3)))].concat(d.sport ? ["JJ"] : []).join(" ") || "·";
-    const b = h("button", { role: "tab", "aria-selected": String(k === view), onclick: () => { view = k; setup = null; renderHome(); } }, `${WEEKDAYS[i]}\n${fromKey(k).getDate()}\n${tag}`);
-    if (k === todayKey()) b.className = "today";
-    strip.append(b);
+// ---- the day panel for the focus "EMOM"
+function emDayPanel(panel, data) {
+  const types = EM_TYPES.filter(t => data.activity === A_NONE || !state.activity.groups.includes(t));
+  if (data.activity !== A_NONE) {
+    panel.append(emH("p", { class: "note" }, `${state.activity.name} trains ${groupsText()}, so only these EMOM types are offered: ${types.join(", ") || "none"}.`));
   }
-  const panel = $("dayPanel"); panel.innerHTML = "";
-  const day = dayOf(view);
-  panel.append(h("p", { style: "font-weight:600;margin:0 0 10px" }, fromKey(view).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })));
-
-  const sport = h("input", { type: "checkbox", checked: !!day.sport, style: "min-height:0;width:20px", onchange: () => { ensureDay(view).sport = sport.checked; save(); renderHome(); } });
-  panel.append(h("label", { class: "row", style: "margin-bottom:10px" }, sport, h("span", {}, "Jiu-Jitsu / sport done today")));
-  if (dayOf(addDays(view, 1)).sport) panel.append(h("p", { class: "note" }, "Sport tomorrow: Pull is a good choice today. Legs and Core can wait."));
-
-  if (!setup) setup = buildSetup("Pull", 0);
-  const card = h("section", { class: "card" });
-  card.append(h("h2", {}, "Log an EMOM workout"));
-  card.append(h("div", { class: "row" },
-    sel(TYPES.map(t => [t, t]), setup.type, v => { setup = buildSetup(v, 0); renderHome(); }, "Day type"),
-    sel(plansOf(setup.type).map((p, i) => [i, planLabel(p)]), setup.opt, v => { setup = buildSetup(setup.type, Number(v)); renderHome(); }, "Plan")));
-  setup.blocks.forEach((b, bi) => {
-    const lvl = levelOf(b.move), lad = ladderOf(b.move), last = history(b.move).pop(), sg = suggest(b.move, b.minutes);
-    const bc = h("div", { style: "border-top:1px solid var(--line);padding-top:10px;margin-top:10px" });
-    bc.append(h("h2", {}, b.move, h("span", { class: "muted" }, `${b.minutes} min planned`)));
-    bc.append(h("p", { class: "muted" }, `Level ${lvl} of ${lad.length}: ${lad[lvl - 1]}`));
-    bc.append(h("div", { class: "row" },
-      h("button", { class: "small", "aria-label": `${b.move} easier level`, onclick: () => { setLevel(b.move, lvl - 1); refreshBlock(bi); renderHome(); } }, "Level −"),
-      h("button", { class: "small", "aria-label": `${b.move} harder level`, onclick: () => { setLevel(b.move, lvl + 1); refreshBlock(bi); renderHome(); } }, "Level +")));
-    if (last) bc.append(h("p", { class: "muted" }, `Last time (${weekdayOf(last.k)} ${shortDate(last.k)}): ${last.done} min × ${last.reps} reps = ${last.reps * last.done}${last.level !== lvl ? ` at level ${last.level}` : ""}`));
-    bc.append(h("p", { class: "target" }, `Target: ${sg.minutes} min × ${sg.reps} reps = ${sg.minutes * sg.reps}`));
-    bc.append(h("p", { class: "muted" }, sg.why));
-    if (sg.levelUp) bc.append(h("button", { class: "small", onclick: () => { setLevel(b.move, lvl + 1); refreshBlock(bi); renderHome(); } }, "Take the next level"));
-    bc.append(h("div", { class: "row" }, h("label", {}, "Reps per minute"),
-      sel(range(1, 10).map(n => [n, n]), b.reps, v => { b.reps = Number(v); }, `${b.move} reps per minute`),
-      h("label", {}, "Minutes done"),
-      sel(range(0, b.minutes).map(n => [n, n]), Math.min(b.done, b.minutes), v => { b.done = Number(v); }, `${b.move} minutes done`)));
-    card.append(bc);
-  });
-  card.append(h("button", { class: "primary", style: "margin-top:12px", onclick: () => {
-    const blocks = setup.blocks.filter(b => b.done > 0).map(b => ({ move: b.move, level: levelOf(b.move), reps: b.reps, minutes: b.minutes, done: b.done, target: b.target }));
-    if (!blocks.length) return;
-    const d = ensureDay(view);
-    d.sessions.push({ type: setup.type, plan: planLabel(plansOf(setup.type)[setup.opt]), ts: Date.now(), blocks });
-    blocks.forEach(b => { state.start[b.move] ??= b.level; });
-    save(); setup = null; renderHome();
-  } }, "Save workout"));
-  panel.append(card);
-
-  day.sessions.forEach((s, si) => panel.append(h("section", { class: "card" },
-    h("h2", {}, s.type, h("span", { class: "muted" }, s.plan)),
-    s.blocks.map(b => h("p", { class: "muted" }, `${b.move}: ${b.done} of ${b.minutes} min × ${b.reps} reps = ${b.reps * b.done} (level ${b.level})`)),
-    h("button", { class: "small", onclick: () => { if (confirm("Delete this workout?")) { day.sessions.splice(si, 1); save(); setup = null; renderHome(); } } }, "Delete"))));
+  const day = state.days[viewDate];
+  if (types.length) {
+    if (!emSetup || emSetupDate !== viewDate || !types.includes(emSetup.type)) { emSetup = emBuild(types[0], 0); emSetupDate = viewDate; }
+    const card = emH("section", { class: "card" });
+    card.append(emH("h2", {}, "Log an EMOM workout"));
+    card.append(emH("div", { class: "row" },
+      emSel(types.map(t => [t, t]), emSetup.type, v => { emSetup = emBuild(v, 0); render(); }, "EMOM type"),
+      emSel(emPlans(emSetup.type).map((p, i) => [i, emPlanLabel(p)]), emSetup.opt, v => { emSetup = emBuild(emSetup.type, Number(v)); render(); }, "EMOM plan")));
+    emSetup.blocks.forEach((b, bi) => {
+      const lvl = emLevel(b.move), lad = emLadder(b.move), last = emHistory(b.move).pop(), sg = emSug(b.move, b.minutes);
+      const bc = emH("div", { style: "border-top:1px solid var(--line);padding-top:10px;margin-top:10px" });
+      bc.append(emH("h2", {}, b.move, emH("span", { class: "variant" }, `${b.minutes} min planned`)));
+      bc.append(emH("p", { class: "variant" }, `Level ${lvl} of ${lad.length}: ${lad[lvl - 1]}`));
+      bc.append(emH("div", { class: "row" },
+        emH("button", { class: "small", "aria-label": `${b.move} easier level`, onclick: () => { emSetLevel(b.move, lvl - 1); emRefresh(bi); render(); } }, "Level −"),
+        emH("button", { class: "small", "aria-label": `${b.move} harder level`, onclick: () => { emSetLevel(b.move, lvl + 1); emRefresh(bi); render(); } }, "Level +")));
+      if (last) bc.append(emH("p", { class: "last" }, `Last time (${weekdayOf(last.k)} ${shortDate(last.k)}): ${last.done} min × ${last.reps} reps = ${last.reps * last.done}${last.level !== lvl ? ` at level ${last.level}` : ""}`));
+      bc.append(emH("p", { class: "target" }, `Target: ${sg.minutes} min × ${sg.reps} reps = ${sg.minutes * sg.reps}`));
+      bc.append(emH("p", { class: "why" }, sg.why));
+      if (sg.levelUp) bc.append(emH("button", { class: "small", onclick: () => { emSetLevel(b.move, lvl + 1); emRefresh(bi); render(); } }, "Take the next level"));
+      bc.append(emH("div", { class: "row" }, emH("label", {}, "Reps per minute"),
+        emSel(emRange(1, 10).map(n => [n, n]), b.reps, v => { b.reps = Number(v); }, `${b.move} reps per minute`),
+        emH("label", {}, "Minutes done"),
+        emSel(emRange(0, b.minutes).map(n => [n, n]), Math.min(b.done, b.minutes), v => { b.done = Number(v); }, `${b.move} minutes done`)));
+      card.append(bc);
+    });
+    card.append(emH("button", { class: "primary", style: "margin-top:12px;width:100%", onclick: () => {
+      const blocks = emSetup.blocks.filter(b => b.done > 0).map(b => ({ move: b.move, level: emLevel(b.move), reps: b.reps, minutes: b.minutes, done: b.done, target: b.target }));
+      if (!blocks.length) return;
+      const d = ensureDay(viewDate);
+      (d.emom ||= []).push({ type: emSetup.type, plan: emPlanLabel(emPlans(emSetup.type)[emSetup.opt]), ts: Date.now(), blocks });
+      blocks.forEach(b => { emS().start[b.move] ??= b.level; });
+      save(); emSetup = null; render();
+    } }, "Save workout"));
+    panel.append(card);
+  }
+  (day?.emom || []).forEach((s, si) => panel.append(emH("section", { class: "card" },
+    emH("h2", {}, s.type, emH("span", { class: "variant" }, s.plan)),
+    s.blocks.map(b => emH("p", { class: "variant" }, `${b.move}: ${b.done} of ${b.minutes} min × ${b.reps} reps = ${b.reps * b.done} (level ${b.level})`)),
+    emH("button", { class: "small", onclick: () => { if (confirm("Delete this EMOM workout?")) { day.emom.splice(si, 1); save(); emSetup = null; render(); } } }, "Delete"))));
 }
 
-// ============================================================ Progress
-function drawChart(host, series, move) {
+// ---- CSV rows for EMOM blocks (same columns as the set-based rows; reps per minute and minutes in the EMOM columns)
+function emCsvRows(from, to, dateCols, rows) {
+  const col = n => CSV_HEAD.indexOf(n);
+  for (const k of Object.keys(state.days).sort()) {
+    if (k < from || k > to) continue;
+    (state.days[k].emom || []).forEach((s, si) => s.blocks.forEach((b, bi) => {
+      const row = Array(CSV_HEAD.length).fill("");
+      row.splice(0, 4, ...dateCols(k));
+      const total = b.reps * b.done, tt = b.target ? b.target.reps * b.target.minutes : "";
+      row[col("Focus")] = "EMOM"; row[col("Exercise")] = b.move; row[col("Group")] = s.type;
+      row[col("Level")] = b.level; row[col("Variant")] = emLadder(b.move)[b.level - 1] || "";
+      row[col("EMOM Reps per Minute")] = b.reps; row[col("EMOM Minutes Done")] = b.done;
+      row[col("Total")] = total; row[col("Optimum Total")] = tt; row[col("Delta vs Optimum")] = tt === "" ? "" : total - tt;
+      row[col("Status")] = b.done >= b.minutes ? "EMOM complete" : `EMOM ${b.done} of ${b.minutes} min`;
+      row[col("Coach")] = "emom"; row[col("Activity")] = state.days[k].activity || A_NONE;
+      rows.push({ k, o: 500 + si * 10 + bi, row });
+    }));
+  }
+}
+
+// ---- progress chart for EMOM blocks
+function emDrawChart(host, series, move) {
   host.innerHTML = "";
   const { actual, ideal } = series;
-  if (!actual.length) { host.append(h("p", { class: "note" }, "No EMOM blocks logged for this exercise yet.")); return; }
+  if (!actual.length) { host.append(emH("p", { class: "note" }, "No EMOM blocks logged for this exercise yet.")); return; }
   const NS = "http://www.w3.org/2000/svg", W = 360, H = 230, L = 44, R = 14, T = 16, B = 36;
   const el = (n, a = {}, t) => { const e = document.createElementNS(NS, n); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); if (t != null) e.textContent = t; return e; };
   const maxV = Math.max(...actual.map(p => p.total), ...ideal.map(p => p.total)) * 1.1 || 1;
   const d0 = actual[0].day, d1 = ideal[ideal.length - 1].day, span = Math.max(1, d1 - d0);
   const x = d => L + ((d - d0) / span) * (W - L - R), y = v => T + (1 - v / maxV) * (H - T - B);
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `Total reps per block for ${move}` });
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `EMOM total reps per block for ${move}` });
   [0, 0.5, 1].forEach(f => { const v = maxV * f; svg.append(el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), style: "stroke: var(--line)" }), el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end", style: "fill: var(--muted); font-size: 10px" }, Math.round(v))); });
   const lab = (day, anchor, text) => svg.append(el("text", { x: x(day), y: H - 12, "text-anchor": anchor, style: "fill: var(--muted); font-size: 10px" }, text));
-  lab(d0, "start", shortDate(actual[0].k));
-  lab(d1, "end", shortDate(addDays(actual[0].k, d1 - d0)));
+  lab(d0, "start", shortDate(actual[0].k)); lab(d1, "end", shortDate(addDays(actual[0].k, d1 - d0)));
   const pts = arr => arr.map(p => `${x(p.day).toFixed(1)},${y(p.total).toFixed(1)}`).join(" ");
   const past = ideal.filter(p => !p.future), fut = ideal.filter((p, i) => p.future || i === actual.length - 1);
   if (past.length > 1) svg.append(el("polyline", { points: pts(past), fill: "none", style: "stroke: var(--ok); stroke-width: 2; stroke-dasharray: 6 4" }));
@@ -478,108 +1745,86 @@ function drawChart(host, series, move) {
   host.append(svg);
 }
 
-let progressMove = null;
-function renderProgress() {
-  const s = $("exSel"); s.innerHTML = "";
-  Object.keys(MOVES).forEach(m => s.append(h("option", { value: m }, m)));
-  progressMove ||= Object.keys(MOVES).find(m => history(m).length) || Object.keys(MOVES)[0];
-  s.value = progressMove;
-  const series = progressSeries(progressMove);
-  drawChart($("chart"), series, progressMove);
-  const st = $("stats"); st.innerHTML = "";
-  const add = t => st.append(h("p", { class: "muted", style: "font-size:.95rem" }, t));
-  const hist = history(progressMove), lad = ladderOf(progressMove), lvl = levelOf(progressMove);
+let emProgressMove = null;
+function emProgress() {
+  const s = $("emSel"); if (!s) return;
+  s.innerHTML = "";
+  Object.keys(EM_LADDER).forEach(m => s.append(emH("option", { value: m }, m)));
+  emProgressMove ||= Object.keys(EM_LADDER).find(m => emHistory(m).length) || Object.keys(EM_LADDER)[0];
+  s.value = emProgressMove;
+  emDrawChart($("emChart"), emSeries(emProgressMove), emProgressMove);
+  const st = $("emStats"); st.innerHTML = "";
+  const add = t => st.append(emH("p", { class: "variant", style: "font-size:.95rem" }, t));
+  const hist = emHistory(emProgressMove), lad = emLadder(emProgressMove), lvl = emLevel(emProgressMove);
   if (!hist.length) { add(`Current level ${lvl}: ${lad[lvl - 1]}`); return; }
-  const first = hist[0], last = hist[hist.length - 1], sg = suggest(progressMove, last.minutes);
+  const first = hist[0], last = hist[hist.length - 1], sg = emSug(emProgressMove, last.minutes);
   add(`Started at level ${first.level} (${lad[first.level - 1] || "?"}) on ${shortDate(first.k)}. Now level ${lvl} (${lad[lvl - 1]}): ${lvl - first.level >= 0 ? "+" : ""}${lvl - first.level} levels.`);
   add(`Next target: ${sg.minutes} min × ${sg.reps} reps = ${sg.minutes * sg.reps}. ${sg.why}`);
   hist.slice(-8).reverse().forEach(b => add(`${weekdayOf(b.k)} ${shortDate(b.k)} · level ${b.level} · ${b.done} of ${b.minutes} min × ${b.reps} reps = ${b.reps * b.done}`));
 }
 
-// ============================================================ Settings: plans and ladders
-function renderSettings() {
-  const list = $("setList"); list.innerHTML = "";
-  list.append(h("h3", {}, "EMOM plans"));
-  const moves = Object.keys(MOVES);
-  TYPES.forEach(type => {
-    const d = h("details", {}, h("summary", {}, `${type} plans`)), body = h("div", { class: "body" });
+// ---- settings: plans and exercises for EMOM days
+function emSettings() {
+  const box = $("emSettings"); if (!box) return;
+  box.innerHTML = "";
+  box.append(emH("h3", {}, "EMOM plans"), emH("p", { class: "note" }, "Choose which exercises and how many minutes belong to each EMOM type. The exercises share their steps with the set-based exercises of the same name."));
+  const moves = Object.keys(EM_LADDER);
+  EM_TYPES.forEach(type => {
+    const d = emH("details", {}, emH("summary", {}, `${type} plans`)), body = emH("div", { class: "body" });
     d.append(body);
     const draw = () => {
       body.innerHTML = "";
-      state.plans[type] = state.plans[type] && state.plans[type].length ? state.plans[type] : clone(PLANS[type]);
-      state.plans[type].forEach((p, pi) => {
-        const c = h("div", { class: "card" }, h("p", { class: "muted" }, `Option ${pi + 1}: ${planLabel(p)}`));
-        p.blocks.forEach((b, bi) => c.append(h("div", { class: "row" },
-          sel(moves.map(m => [m, m]), b[0], v => { b[0] = v; save(); draw(); }, "Exercise"),
-          h("input", { type: "number", min: 1, max: 60, value: b[1], "aria-label": "Planned minutes", onchange: e => { b[1] = Math.min(60, Math.max(1, Number(e.target.value) || 1)); save(); draw(); } }),
-          h("button", { class: "small", onclick: () => { p.blocks.splice(bi, 1); if (!p.blocks.length) state.plans[type].splice(pi, 1); save(); draw(); } }, "Remove"))));
-        c.append(h("button", { class: "small", onclick: () => { p.blocks.push([moves[0], 10]); save(); draw(); } }, "Add block"));
+      emPlans(type);
+      const plans = emS().plans[type] = emS().plans[type] && emS().plans[type].length ? emS().plans[type] : emClone(EM_PLANS[type]);
+      plans.forEach((p, pi) => {
+        const c = emH("div", { class: "card" }, emH("p", { class: "variant" }, `Option ${pi + 1}: ${emPlanLabel(p)}`));
+        p.blocks.forEach((b, bi) => c.append(emH("div", { class: "row" },
+          emSel(moves.map(m => [m, m]), b[0], v => { b[0] = v; save(); draw(); }, "Exercise"),
+          emH("input", { type: "number", min: 1, max: 60, value: b[1], "aria-label": "Planned minutes", onchange: e => { b[1] = Math.min(60, Math.max(1, Number(e.target.value) || 1)); save(); draw(); } }),
+          emH("button", { class: "small", onclick: () => { p.blocks.splice(bi, 1); if (!p.blocks.length) plans.splice(pi, 1); save(); draw(); } }, "Remove"))));
+        c.append(emH("button", { class: "small", onclick: () => { p.blocks.push([moves[0], 10]); save(); draw(); } }, "Add block"));
         body.append(c);
       });
-      body.append(h("button", { class: "small", onclick: () => { state.plans[type].push({ blocks: [[moves[0], 20]] }); save(); draw(); } }, "Add option"));
+      body.append(emH("button", { class: "small", onclick: () => { plans.push({ blocks: [[moves[0], 20]] }); save(); draw(); } }, "Add option"));
     };
-    draw(); list.append(d);
+    draw(); box.append(d);
   });
-  list.append(h("h3", {}, "Exercises"));
+  box.append(emH("h3", {}, "EMOM exercises"));
   moves.forEach(move => {
-    const d = h("details", {}, h("summary", {}, move)), body = h("div", { class: "body" });
+    const key = EM_LADDER[move];
+    const d = emH("details", {}, emH("summary", {}, move)), body = emH("div", { class: "body" });
     d.append(body);
     d.ontoggle = () => {
       if (!d.open || d.dataset.built) return; d.dataset.built = "1";
       const draw = () => {
         body.innerHTML = "";
-        const arr = state.ladders[move] ?? DEFAULT_LADDERS[MOVES[move]];
-        body.append(h("div", { class: "row" }, h("label", {}, "Current level"),
-          h("input", { type: "number", min: 1, value: levelOf(move), onchange: e => { setLevel(move, Number(e.target.value) || 1); } })));
+        const arr = state.ladders[key] ?? DEFAULT_LADDERS[key];
+        body.append(emH("div", { class: "row" }, emH("label", {}, "Current EMOM level"),
+          emH("input", { type: "number", min: 1, value: emLevel(move), onchange: e => { emSetLevel(move, Number(e.target.value) || 1); } })));
         for (let i = 0; i < Math.max(20, arr.length); i++) {
-          body.append(h("div", { class: "step" }, h("span", {}, i + 1), h("input", { type: "text", placeholder: "empty", value: arr[i] ?? "", "aria-label": `${move} level ${i + 1}`,
-            oninput: e => { const a = (state.ladders[move] ||= DEFAULT_LADDERS[MOVES[move]].slice()); while (a.length <= i) a.push(""); a[i] = e.target.value; save(); } })));
+          body.append(emH("div", { class: "step" }, emH("span", {}, i + 1), emH("input", { type: "text", placeholder: "empty", value: arr[i] ?? "", "aria-label": `${move} level ${i + 1}`,
+            oninput: e => { const a = (state.ladders[key] ||= DEFAULT_LADDERS[key].slice()); while (a.length <= i) a.push(""); a[i] = e.target.value; save(); } })));
         }
-        body.append(h("div", { class: "btns", style: "margin-top:10px" },
-          h("button", { class: "small", onclick: () => { const a = (state.ladders[move] ||= DEFAULT_LADDERS[MOVES[move]].slice()); const t = Math.max(20, a.length) + 1; while (a.length < t) a.push(""); save(); draw(); } }, "Add level"),
-          h("button", { class: "small", onclick: () => { if (confirm("Reset the steps of " + move + " to the defaults?")) { delete state.ladders[move]; save(); draw(); } } }, "Restore defaults")));
+        body.append(emH("div", { class: "btns", style: "margin-top:10px" },
+          emH("button", { class: "small", onclick: () => { const a = (state.ladders[key] ||= DEFAULT_LADDERS[key].slice()); const t = Math.max(20, a.length) + 1; while (a.length < t) a.push(""); save(); draw(); } }, "Add level"),
+          emH("button", { class: "small", onclick: () => { if (confirm("Reset the steps of " + move + " to the defaults?")) { delete state.ladders[key]; save(); draw(); } } }, "Restore defaults")));
       };
       draw();
     };
-    list.append(d);
+    box.append(d);
   });
 }
 
-// ============================================================ Views, export, events
-function show(v) {
-  ["home", "progress", "settings"].forEach(n => { $(n + "View").hidden = n !== v; });
-  window.scrollTo(0, 0);
-  if (v === "home") renderHome(); else if (v === "progress") renderProgress(); else renderSettings();
-}
-const esc = v => { const s = String(v ?? ""); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-function download(name, text, type) {
-  const url = URL.createObjectURL(new Blob([text], { type }));
-  const a = Object.assign(document.createElement("a"), { href: url, download: name });
-  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-$("prev").onclick = () => { view = addDays(view, -7); setup = null; renderHome(); };
-$("next").onclick = () => { view = addDays(view, 7); setup = null; renderHome(); };
-$("progressBtn").onclick = () => show("progress");
-$("settingsBtn").onclick = () => show("settings");
-$("backP").onclick = () => show("home");
-$("back").onclick = () => { setup = null; show("home"); };
-$("exSel").onchange = () => { progressMove = $("exSel").value; renderProgress(); };
-$("exportCsv").onclick = () => {
-  const from = $("from").value, to = $("to").value;
-  download(from || to ? `emom_${from || "start"}_${to || "end"}.csv` : "emom_all.csv",
-    "\ufeff" + csvRows(from || undefined, to || undefined).map(r => r.map(esc).join(";")).join("\n"), "text/csv");
-};
-$("exportJson").onclick = () => download("emom-backup.json", JSON.stringify(state, null, 2), "application/json");
-$("importJson").onclick = () => $("file").click();
-$("file").onchange = async () => {
-  const f = $("file").files[0]; if (!f) return;
-  try { const d = normalize(JSON.parse(await f.text())); if (!d) throw new Error("no backup"); state = d; save(); setup = null; renderHome(); }
-  catch (e) { alert("This file is not a valid EMOM backup."); }
-  $("file").value = "";
-};
+// hook the EMOM sections into the existing progress and settings views
+const emProgressBase = renderProgress;
+renderProgress = function () { emProgressBase(); emProgress(); };
+const emSettingsBase = renderSettings;
+renderSettings = function () { emSettingsBase(); emSettings(); };
+if ($("emSel")) $("emSel").onchange = () => { emProgressMove = $("emSel").value; emProgress(); };
 
-navigator.storage?.persist?.();
-show("home");
+// ============================================================ Start
+navigator.storage?.persist?.();   // asks the browser not to evict the data automatically
+render();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js");
 </script>
 </body>

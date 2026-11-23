@@ -1,6 +1,6 @@
 // Minimal service worker: stores the app files in the cache so the app starts offline.
 // Increase the version number below whenever the files change, otherwise the old version stays cached.
-const CACHE = "emom-v2";
+const CACHE = "progression-classic-v3";
 const FILES = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", e => {
