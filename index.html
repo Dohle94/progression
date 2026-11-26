@@ -329,6 +329,15 @@ DEFAULT_LADDERS["Face Pulls"] = [
   "Face Pulls, Band 5, 1 s Pause", "Face Pulls, Bands 4 + 5 Doubled"
 ];
 
+DEFAULT_LADDERS["Biceps Curls"] = [
+  "Biceps Curls, 2.5 kg", "Biceps Curls, 2.5 kg, 3 s Lowering", "Biceps Curls, 7.5 kg", "Biceps Curls, 7.5 kg, 3 s Lowering",
+  "Biceps Curls, 15 kg", "Biceps Curls, 15 kg, 3 s Lowering"
+];
+DEFAULT_LADDERS["Triceps Extensions"] = [
+  "Close-Grip Push-ups, Incline", "Close-Grip Push-ups", "Overhead Triceps Extension, 2.5 kg", "Overhead Triceps Extension, 7.5 kg",
+  "Overhead Triceps Extension, 7.5 kg, 3 s Lowering", "Overhead Triceps Extension, 15 kg", "Overhead Triceps Extension, 15 kg, 3 s Lowering"
+];
+
 // ============================================================ Exercises and focus days
 const GROUPS = ["Push", "Pull", "Legs", "Core"];
 
@@ -354,7 +363,10 @@ const EXERCISES = [
   ["Hip Hinge / RDL Progression", "Legs", 4, 8, 12, "reps"],
   ["Calf Raise Progression", "Legs", 3, 10, 15, "reps"],
   ["Lateral Raises", "Push", 3, 10, 15, "reps"],
-  ["Face Pulls", "Pull", 3, 10, 15, "reps"]
+  ["Face Pulls", "Pull", 3, 10, 15, "reps"],
+  ["Biceps Curls", "Pull", 3, 8, 12, "reps"],
+  ["Triceps Extensions", "Push", 3, 10, 15, "reps"],
+  ["Lying Leg Raises", "Core", 3, 8, 12, "reps"]
 ].map(([name, group, sets, min, max, unit]) => ({ name, group, sets, min, max, unit, start: 1 }));
 const EX = Object.fromEntries(EXERCISES.map(e => [e.name, e]));
 
@@ -396,6 +408,38 @@ const FOCUS_PATTERNS = {
     Lower: [["Squat Progression"], ["Hip Hinge / RDL Progression"], ["Core Pull (Ab Wheel)", "A"], ["Core 3 (Ab Compressions)", "A"]]
   }
 };
+// GK A (once a week), GK B (twice a week) + H blocks. Main lifts 4 sets, H blocks 3 sets per superset.
+const H1 = [["Face Pulls", "A", 3], ["Lateral Raises", "A", 3], ["Core Pull (Ab Wheel)", "B", 3], ["Lying Leg Raises", "B", 3], ["Core 2 Push (Side Plank)", "B", 3]];
+const H2 = [["Biceps Curls", "A", 3], ["Triceps Extensions", "A", 3], ["Core Pull (Ab Wheel)", "B", 3], ["Lying Leg Raises", "B", 3], ["Core 2 Push (Side Plank)", "B", 3]];
+const GKB = [["Pull-up", "", 4], ["Dips", "", 4], ["Pistol Squat", "", 4]];
+const GK = { GKA: [["Row / FL Pull-up", "", 4], ["Pike / Handstand Push-up Progression", "", 4], ["Glute Bridge / Nordic Curl Progression", "", 4]],
+             GKB_H1: [...GKB, ...H1], GKB_H2: [...GKB, ...H2] };
+Object.keys(FOCUS_PATTERNS).forEach(tf => Object.assign(FOCUS_PATTERNS[tf], GK));
+const GK_FOCUS = new Set(Object.keys(GK));
+const H_NAMES = new Set([...H1, ...H2].map(x => x[0]));
+
+// 12-week block: start date kept in its own storage key; week plan and RIR targets derive from it
+const BLOCK_KEY = "progression-block-v1";
+let blockStart = (() => { try { return localStorage.getItem(BLOCK_KEY) || ""; } catch (e) { return ""; } })();
+const setBlockStart = v => { blockStart = v; try { v ? localStorage.setItem(BLOCK_KEY, v) : localStorage.removeItem(BLOCK_KEY); } catch (e) { /* ignore */ } };
+function blockInfo(k) {
+  if (!blockStart) return null;
+  const w = Math.floor((dayNum(k) - dayNum(blockStart)) / 7) + 1;
+  return w >= 1 && w <= 12 ? { w } : null;
+}
+const RIR_MAIN = w => (w <= 4 ? "3" : w <= 8 ? "2" : w <= 11 ? "1-2" : "4");
+const RIR_H = w => (w <= 4 ? "3" : w <= 8 ? "2" : w <= 11 ? "1, last set 0-1" : "4");
+function rirText(ex, data) {
+  const i = blockInfo(viewDate);
+  if (!i || !GK_FOCUS.has(data.focus)) return "";
+  if (H_NAMES.has(ex.name)) return RIR_H(i.w);
+  const r = RIR_MAIN(i.w);
+  return r === "1-2" && (ex.name.startsWith("Pike") || ex.name === "Pistol Squat") ? "2" : r;
+}
+const PLAN_WEEK = { Mon: { focus: "GKA", activity: "tomorrow" }, Tue: { focus: "none", activity: "today" },
+                    Thu: { focus: "GKB_H2", activity: "none" }, Sat: { focus: "GKB_H1", activity: "none" } };
+const planDay = k => (blockInfo(k) ? PLAN_WEEK[weekdayOf(k)] || null : null);
+
 // sets given by the day type (for example 5 on a full body day), if any
 const patternSets = (ex, data) => data ? (FOCUS_PATTERNS[data.tf] || FOCUS_PATTERNS.upper)[data.focus]?.find(([n]) => n === ex.name)?.[2] : undefined;
 const slotsFor = (tf, focus) => ((FOCUS_PATTERNS[tf] || FOCUS_PATTERNS.upper)[focus] || []).map(([name, ss]) => ({ ex: EX[name], ss: ss || "" }));
@@ -403,8 +447,8 @@ const slotsOf = day => slotsFor(day.tf, day.focus);
 const exercisesOfFocus = tf => [...new Set(Object.values(FOCUS_PATTERNS[tf]).flat().map(([n]) => n))].map(n => EX[n]);
 
 const F_NONE = "none";
-const FOCUS_LABEL = { none: "Free day", Push: "Push", Pull: "Pull", Full: "Full Body", Upper: "Upper Body", Lower: "Lower Body", EMOM: "EMOM" };
-const FOCUS_SHORT = { none: "", Push: "Push", Pull: "Pull", Full: "FB", Upper: "Up", Lower: "Low", EMOM: "EM" };
+const FOCUS_LABEL = { none: "Free day", Push: "Push", Pull: "Pull", Full: "Full Body", Upper: "Upper Body", Lower: "Lower Body", EMOM: "EMOM", GKA: "GK A", GKB_H1: "GK B + H1", GKB_H2: "GK B + H2" };
+const FOCUS_SHORT = { none: "", Push: "Push", Pull: "Pull", Full: "FB", Upper: "Up", Lower: "Low", EMOM: "EM", GKA: "A", GKB_H1: "B+1", GKB_H2: "B+2" };
 const A_NONE = "none", A_TODAY = "today", A_NEXT = "tomorrow";
 
 const ST_UP = "Level up";
@@ -590,17 +634,18 @@ const maxStage = ex => ladderOf(ex).length;
 // ---- Days
 // read without creating an entry. tf = body focus the day was planned with (upper or lower)
 function peekDay(k) {
-  const d = state.days[k];
-  return { focus: d?.focus ?? F_NONE, activity: d?.activity ?? A_NONE, reps: d?.reps ?? {}, stretch: !!d?.stretch,
+  const d = state.days[k], pl = d ? null : planDay(k);
+  return { focus: d?.focus ?? pl?.focus ?? F_NONE, activity: d?.activity ?? pl?.activity ?? A_NONE, reps: d?.reps ?? {}, stretch: !!d?.stretch,
            tf: d ? (d.tf ?? "upper") : state.focus };
 }
 // write (creates the entry)
 function ensureDay(k) {
-  return (state.days[k] ||= { focus: F_NONE, activity: A_NONE, reps: {}, tf: state.focus });
+  const pl = planDay(k);
+  return (state.days[k] ||= { focus: pl?.focus ?? F_NONE, activity: pl?.activity ?? A_NONE, reps: {}, tf: state.focus });
 }
 
 // An activity (e.g. Jiu-Jitsu) skips the exercises of the muscle groups it trains, today and the day before
-const isSkipped = (ex, data) => data.activity !== A_NONE && state.activity.groups.includes(ex.group);
+const isSkipped = (ex, data) => data.activity !== A_NONE && (GK_FOCUS.has(data.focus) ? H_NAMES.has(ex.name) : state.activity.groups.includes(ex.group));
 
 // ============================================================ Logic
 const filledReps = (ex, data) => (data.reps[ex.name] || []).slice(0, 6).map(v => (v === "" || v == null ? NaN : Number(v)));
@@ -898,6 +943,16 @@ function render() {
   head.className = "dayhead";
   head.textContent = fromKey(viewDate).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   panel.append(head);
+  const blkInfo = blockInfo(viewDate), blkNote = document.createElement("p");
+  blkNote.className = "note";
+  blkNote.textContent = blkInfo
+    ? `12-week block, week ${blkInfo.w}/12 · target RIR: main lifts ${RIR_MAIN(blkInfo.w)}, H blocks ${RIR_H(blkInfo.w)}${blkInfo.w === 12 ? " · deload: half the sets, then test your rep maxes" : ""}`
+    : (blockStart ? "No block week for this date (block runs 12 weeks)." : "No 12-week block set.");
+  const blkBtn = document.createElement("button");
+  blkBtn.className = "small";
+  blkBtn.textContent = blockStart ? "Restart block this week" : "Start 12-week block this week";
+  blkBtn.onclick = () => { setBlockStart(mondayOf(todayKey())); render(); };
+  panel.append(blkNote, blkBtn);
 
   // focus: free day / push / pull / full body
   const fsel = document.createElement("select");
@@ -930,7 +985,7 @@ function render() {
     panel.append(note);
   } else if (data.activity !== A_NONE) {
     note.textContent = shown.length < all.length
-      ? `${state.activity.name} trains ${groupsText()}, so those exercises are skipped.`
+      ? (GK_FOCUS.has(data.focus) ? `${state.activity.name}: H block skipped, main lifts stay.` : `${state.activity.name} trains ${groupsText()}, so those exercises are skipped.`)
       : `${state.activity.name} does not train any exercise of this workout, nothing is skipped.`;
     panel.append(note);
   }
@@ -950,7 +1005,7 @@ function render() {
     const h = document.createElement("h2");
     const t = document.createElement("span"); t.textContent = ex.name;
     const u = document.createElement("span"); u.className = "variant";
-    u.textContent = `${ss ? "Superset " + ss + " · " : ""}${setsOf(ex, data)} × ${minOf(ex)}–${maxOf(ex)} ${ex.unit}`;
+    u.textContent = `${ss ? "Superset " + ss + " · " : ""}${setsOf(ex, data)} × ${minOf(ex)}–${maxOf(ex)} ${ex.unit}${rirText(ex, data) ? " · RIR " + rirText(ex, data) : ""}`;
     h.append(t, u);
 
     const v = document.createElement("p");
