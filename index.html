@@ -143,6 +143,9 @@
     </div>
     <div id="stats"></div>
     <p class="note">Progress score = level plus the position of your last set inside the rep range (level 7 with a last set of 8 in a 5–10 range is 6.6). The last set is the one that catches up last. The ideal path follows the same rule as your targets: one rep on one set per session, set 1 first, until all sets match, then set 1 again. When every set reaches the maximum, the next level starts at the minimum reps. Dotted = the next 3 sessions at your average training interval.</p>
+    <h3>Body weight</h3>
+    <div id="bwChart"></div>
+    <div id="bwStats" class="note"></div>
     <h3>EMOM</h3>
     <select id="emSel" class="field" aria-label="EMOM exercise"></select>
     <div id="emChart"></div>
@@ -635,7 +638,7 @@ const maxStage = ex => ladderOf(ex).length;
 // read without creating an entry. tf = body focus the day was planned with (upper or lower)
 function peekDay(k) {
   const d = state.days[k], pl = d ? null : planDay(k);
-  return { focus: d?.focus ?? pl?.focus ?? F_NONE, activity: d?.activity ?? pl?.activity ?? A_NONE, reps: d?.reps ?? {}, stretch: !!d?.stretch,
+  return { focus: d?.focus ?? pl?.focus ?? F_NONE, activity: d?.activity ?? pl?.activity ?? A_NONE, reps: d?.reps ?? {}, stretch: !!d?.stretch, bw: d?.bw ?? "", badSleep: !!d?.badSleep,
            tf: d ? (d.tf ?? "upper") : state.focus };
 }
 // write (creates the entry)
@@ -827,7 +830,7 @@ function progressSeries(ex, future = 3) {
 const CSV_HEAD = ["Date", "Weekday", "Calendar Week", "Year", "Focus", "Exercise", "Group", "Level", "Variant", "Sets",
   "Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6", "Total",
   "Optimum Set 1", "Optimum Set 2", "Optimum Set 3", "Optimum Set 4", "Optimum Set 5", "Optimum Set 6", "Optimum Total",
-  "Delta vs Optimum", "Weakest Set", "Status", "Coach", "Progress Score", "Ideal Score", "Activity", "EMOM Reps per Minute", "EMOM Minutes Done"];
+  "Delta vs Optimum", "Weakest Set", "Status", "Coach", "Progress Score", "Ideal Score", "Activity", "EMOM Reps per Minute", "EMOM Minutes Done", "Body Weight (kg)", "Slept Badly"];
 
 function csvRows(from = "0000-00-00", to = "9999-99-99") {
   const rows = [];
@@ -879,9 +882,21 @@ function csvRows(from = "0000-00-00", to = "9999-99-99") {
       rows.push({ k: e.date, o: -0.5 + i * 0.1, row });
     });
   }
+  for (const k of Object.keys(state.days)) {
+    const d = peekDay(k);
+    if (k < from || k > to || (d.bw === "" && !d.badSleep)) continue;
+    const row = Array(CSV_HEAD.length).fill("");
+    row.splice(0, 4, ...dateCols(k));
+    row[CSV_HEAD.indexOf("Focus")] = FOCUS_LABEL[d.focus];
+    row[CSV_HEAD.indexOf("Exercise")] = "Body";
+    row[CSV_HEAD.indexOf("Status")] = "Body weight / sleep";
+    row[CSV_HEAD.indexOf("Body Weight (kg)")] = d.bw;
+    row[CSV_HEAD.indexOf("Slept Badly")] = d.badSleep ? "yes" : "";
+    rows.push({ k, o: -0.8, row });
+  }
   emCsvRows(from, to, dateCols, rows);
   rows.sort((a, b) => (a.k < b.k ? -1 : a.k > b.k ? 1 : a.o - b.o));
-  return [CSV_HEAD, ...rows.map(r => r.row)];
+  return [CSV_HEAD, ...rows.map(r => Object.assign(Array(CSV_HEAD.length).fill(""), r.row))];
 }
 
 // ============================================================ EMOM (every minute on the minute)
@@ -971,6 +986,23 @@ function render() {
   asel.value = data.activity;
   asel.onchange = () => { ensureDay(viewDate).activity = asel.value; save(); render(); };
   panel.append(asel);
+
+  // body weight and "slept badly" for this day
+  const bodyCard = document.createElement("section");
+  bodyCard.className = "card";
+  const bwLab = document.createElement("label"); bwLab.className = "row";
+  const bwIn = document.createElement("input");
+  bwIn.type = "number"; bwIn.step = "0.1"; bwIn.min = "30"; bwIn.max = "250"; bwIn.inputMode = "decimal";
+  bwIn.placeholder = "kg"; bwIn.value = data.bw; bwIn.style.width = "90px";
+  bwIn.onchange = () => { const v = parseFloat(bwIn.value); const dd = ensureDay(viewDate); if (Number.isNaN(v)) delete dd.bw; else dd.bw = Math.round(v * 10) / 10; save(); };
+  bwLab.append(document.createTextNode("Body weight "), bwIn, document.createTextNode(" kg"));
+  const slLab = document.createElement("label"); slLab.className = "row";
+  const slCb = document.createElement("input");
+  slCb.type = "checkbox"; slCb.checked = data.badSleep; slCb.style.minHeight = "0"; slCb.style.width = "20px";
+  slCb.onchange = () => { ensureDay(viewDate).badSleep = slCb.checked; save(); };
+  slLab.append(slCb, document.createTextNode("Slept badly"));
+  bodyCard.append(bwLab, slLab);
+  panel.append(bodyCard);
 
   if (data.focus === "EMOM") { emDayPanel(panel, data); return; }
 
@@ -1179,7 +1211,36 @@ function drawChart(host, series, ex) {
   host.append(svg);
 }
 
+function renderBodyWeight() {
+  const host = $("bwChart"), box = $("bwStats");
+  host.innerHTML = ""; box.textContent = "";
+  const pts = Object.keys(state.days).sort()
+    .filter(k => state.days[k].bw !== undefined && state.days[k].bw !== "" && !Number.isNaN(Number(state.days[k].bw)))
+    .map(k => ({ k, v: Number(state.days[k].bw), bad: !!state.days[k].badSleep }));
+  if (pts.length < 2) { box.textContent = pts.length ? `Last: ${pts[0].v} kg. Log at least two days to see a trend.` : "No weight logged yet. Enter it on any day."; return; }
+  const NS = "http://www.w3.org/2000/svg", W = 360, H = 180, L = 40, R = 12, T = 12, B = 24;
+  const x0 = dayNum(pts[0].k), x1 = dayNum(pts[pts.length - 1].k), vs = pts.map(p => p.v);
+  const lo = Math.floor(Math.min(...vs) - 0.5), hi = Math.ceil(Math.max(...vs) + 0.5);
+  const X = k => L + (dayNum(k) - x0) / (x1 - x0) * (W - L - R), Y = v => T + (hi - v) / (hi - lo) * (H - T - B);
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.style.width = "100%";
+  const add = (n, a, t) => { const e = document.createElementNS(NS, n); for (const [q, w] of Object.entries(a)) e.setAttribute(q, w); if (t) e.textContent = t; svg.append(e); };
+  [lo, (lo + hi) / 2, hi].forEach(v => add("text", { x: 2, y: Y(v) + 4, "font-size": 11, fill: "currentColor" }, v.toFixed(1)));
+  add("polyline", { points: pts.map(p => `${X(p.k)},${Y(p.v)}`).join(" "), fill: "none", stroke: "#1F5FBF", "stroke-width": 2 });
+  pts.forEach(p => add("circle", { cx: X(p.k), cy: Y(p.v), r: p.bad ? 5 : 3, fill: p.bad ? "#C0392B" : "#1F5FBF" }));
+  add("text", { x: L, y: H - 6, "font-size": 11, fill: "currentColor" }, shortDate(pts[0].k));
+  add("text", { x: W - R, y: H - 6, "font-size": 11, "text-anchor": "end", fill: "currentColor" }, shortDate(pts[pts.length - 1].k));
+  host.append(svg);
+  const last = pts[pts.length - 1], avg = a => a.reduce((t, q) => t + q.v, 0) / a.length;
+  const inR = (q, a, b) => dayNum(q.k) > dayNum(last.k) - a && dayNum(q.k) <= dayNum(last.k) - b;
+  const cur = pts.filter(q => inR(q, 7, 0)), prev = pts.filter(q => inR(q, 14, 7));
+  const diff = cur.length && prev.length ? avg(cur) - avg(prev) : null;
+  box.textContent = `Last: ${last.v} kg` + (diff === null ? "" : ` · 7-day average ${avg(cur).toFixed(1)} kg (${diff >= 0 ? "+" : ""}${diff.toFixed(1)} vs. the week before)`)
+    + ` · red dots: slept badly (${pts.filter(q => q.bad).length})`;
+}
+
 function renderProgress() {
+  renderBodyWeight();
   const sel = $("exSel");
   sel.innerHTML = "";
   EXERCISES.forEach(ex => sel.add(new Option(ex.name, ex.name)));
