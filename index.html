@@ -835,7 +835,7 @@ function progressSeries(ex, future = 3) {
 const CSV_HEAD = ["Date", "Weekday", "Calendar Week", "Year", "Focus", "Exercise", "Group", "Level", "Variant", "Sets",
   "Set 1", "Set 2", "Set 3", "Set 4", "Set 5", "Set 6", "Total",
   "Optimum Set 1", "Optimum Set 2", "Optimum Set 3", "Optimum Set 4", "Optimum Set 5", "Optimum Set 6", "Optimum Total",
-  "Delta vs Optimum", "Weakest Set", "Status", "Coach", "Progress Score", "Ideal Score", "Activity", "EMOM Reps per Minute", "EMOM Minutes Done", "Body Weight (kg)", "Slept Badly"];
+  "Delta vs Optimum", "Weakest Set", "Status", "Coach", "Progress Score", "Ideal Score", "Activity", "EMOM Reps per Minute", "EMOM Minutes Done", "Body Weight (kg)", "Slept Badly", "EMOM Extra Reps per Minute", "EMOM Extra Minutes", "EMOM Extra 2 Reps per Minute", "EMOM Extra 2 Minutes", "EMOM Total Reps incl. Extra"];
 
 function csvRows(from = "0000-00-00", to = "9999-99-99") {
   const rows = [];
@@ -1821,10 +1821,18 @@ function emDayPanel(panel, data) {
         emSel(emRange(1, 10).map(n => [n, n]), b.reps, v => { b.reps = Number(v); }, `${b.move} reps per minute`),
         emH("label", {}, "Minutes done"),
         emSel(emRange(0, b.minutes).map(n => [n, n]), Math.min(b.done, b.minutes), v => { b.done = Number(v); }, `${b.move} minutes done`)));
+      bc.append(emH("div", { class: "row" }, emH("label", {}, "Then reps per minute"),
+        emSel([[0, "–"], ...emRange(1, 10).map(n => [n, n])], b.reps2 || 0, v => { b.reps2 = Number(v); }, `${b.move} extra reps per minute`),
+        emH("label", {}, "for minutes"),
+        emSel(emRange(0, b.minutes).map(n => [n, n]), b.done2 || 0, v => { b.done2 = Number(v); }, `${b.move} extra minutes`)));
+      bc.append(emH("div", { class: "row" }, emH("label", {}, "Then reps per minute"),
+        emSel([[0, "–"], ...emRange(1, 10).map(n => [n, n])], b.reps3 || 0, v => { b.reps3 = Number(v); }, `${b.move} third stage reps per minute`),
+        emH("label", {}, "for minutes"),
+        emSel(emRange(0, b.minutes).map(n => [n, n]), b.done3 || 0, v => { b.done3 = Number(v); }, `${b.move} third stage minutes`)));
       card.append(bc);
     });
     card.append(emH("button", { class: "primary", style: "margin-top:12px;width:100%", onclick: () => {
-      const blocks = emSetup.blocks.filter(b => b.done > 0).map(b => ({ move: b.move, level: emLevel(b.move), reps: b.reps, minutes: b.minutes, done: b.done, target: b.target }));
+      const blocks = emSetup.blocks.filter(b => b.done > 0).map(b => ({ move: b.move, level: emLevel(b.move), reps: b.reps, minutes: b.minutes, done: b.done, target: b.target, reps2: b.reps2 || 0, done2: b.reps2 ? (b.done2 || 0) : 0, reps3: b.reps3 || 0, done3: b.reps3 ? (b.done3 || 0) : 0 }));
       if (!blocks.length) return;
       const d = ensureDay(viewDate);
       (d.emom ||= []).push({ type: emSetup.type, plan: emPlanLabel(emPlans(emSetup.type)[emSetup.opt]), ts: Date.now(), blocks });
@@ -1835,11 +1843,12 @@ function emDayPanel(panel, data) {
   }
   (day?.emom || []).forEach((s, si) => panel.append(emH("section", { class: "card" },
     emH("h2", {}, s.type, emH("span", { class: "variant" }, s.plan)),
-    s.blocks.map(b => emH("p", { class: "variant" }, `${b.move}: ${b.done} of ${b.minutes} min × ${b.reps} reps = ${b.reps * b.done} (level ${b.level})`)),
+    s.blocks.map(b => emH("p", { class: "variant" }, `${b.move}: ${b.done} of ${b.minutes} min × ${b.reps} reps = ${b.reps * b.done}${b.done2 ? ` + ${b.done2} min × ${b.reps2} reps` : ""}${b.done3 ? ` + ${b.done3} min × ${b.reps3} reps` : ""}${b.done2 || b.done3 ? ` = ${emTot(b)} total` : ""} (level ${b.level})`)),
     emH("button", { class: "small", onclick: () => { if (confirm("Delete this EMOM workout?")) { day.emom.splice(si, 1); save(); emSetup = null; render(); } } }, "Delete"))));
 }
 
 // ---- CSV rows for EMOM blocks (same columns as the set-based rows; reps per minute and minutes in the EMOM columns)
+const emTot = b => b.reps * b.done + (b.reps2 || 0) * (b.done2 || 0) + (b.reps3 || 0) * (b.done3 || 0);
 function emCsvRows(from, to, dateCols, rows) {
   const col = n => CSV_HEAD.indexOf(n);
   for (const k of Object.keys(state.days).sort()) {
@@ -1851,6 +1860,9 @@ function emCsvRows(from, to, dateCols, rows) {
       row[col("Focus")] = "EMOM"; row[col("Exercise")] = b.move; row[col("Group")] = s.type;
       row[col("Level")] = b.level; row[col("Variant")] = emLadder(b.move)[b.level - 1] || "";
       row[col("EMOM Reps per Minute")] = b.reps; row[col("EMOM Minutes Done")] = b.done;
+      row[col("EMOM Extra Reps per Minute")] = b.reps2 || ""; row[col("EMOM Extra Minutes")] = b.done2 || "";
+      row[col("EMOM Extra 2 Reps per Minute")] = b.reps3 || ""; row[col("EMOM Extra 2 Minutes")] = b.done3 || "";
+      row[col("EMOM Total Reps incl. Extra")] = emTot(b);
       row[col("Total")] = total; row[col("Optimum Total")] = tt; row[col("Delta vs Optimum")] = tt === "" ? "" : total - tt;
       row[col("Status")] = b.done >= b.minutes ? "EMOM complete" : `EMOM ${b.done} of ${b.minutes} min`;
       row[col("Coach")] = "emom"; row[col("Activity")] = state.days[k].activity || A_NONE;
