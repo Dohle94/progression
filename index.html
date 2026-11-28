@@ -414,9 +414,13 @@ const FOCUS_PATTERNS = {
 // GK A (once a week), GK B (twice a week) + H blocks. Main lifts 4 sets, H blocks 3 sets per superset.
 const H1 = [["Face Pulls", "A", 3], ["Lateral Raises", "A", 3], ["Core Pull (Ab Wheel)", "B", 3], ["Lying Leg Raises", "B", 3], ["Core 2 Push (Side Plank)", "B", 3]];
 const H2 = [["Biceps Curls", "A", 3], ["Triceps Extensions", "A", 3], ["Core Pull (Ab Wheel)", "B", 3], ["Lying Leg Raises", "B", 3], ["Core 2 Push (Side Plank)", "B", 3]];
+const HP = [["Pull-up", "", 4], ["Row / FL Pull-up", "", 3], ["Glute Bridge / Nordic Curl Progression", "", 2],
+            ["Face Pulls", "A", 3], ["Biceps Curls", "A", 3], ["Core Pull (Ab Wheel)", "B", 3], ["Core 2 Push (Side Plank)", "B", 3]];
+const HU = [["Dips", "", 4], ["Pike / Handstand Push-up Progression", "", 3], ["Pistol Squat", "", 2],
+            ["Lateral Raises", "A", 3], ["Triceps Extensions", "A", 3], ["Lying Leg Raises", "B", 3], ["Core 2 Push (Side Plank)", "B", 3]];
 const GKB = [["Pull-up", "", 4], ["Dips", "", 4], ["Pistol Squat", "", 4]];
 const GK = { GKA: [["Row / FL Pull-up", "", 4], ["Pike / Handstand Push-up Progression", "", 4], ["Glute Bridge / Nordic Curl Progression", "", 4]],
-             GKB_H1: [...GKB, ...H1], GKB_H2: [...GKB, ...H2] };
+             GKB_H1: [...GKB, ...H1], GKB_H2: [...GKB, ...H2], HPULL: HP, HPUSH: HU };
 Object.keys(FOCUS_PATTERNS).forEach(tf => Object.assign(FOCUS_PATTERNS[tf], GK));
 const GK_FOCUS = new Set(Object.keys(GK));
 const H_NAMES = new Set([...H1, ...H2].map(x => x[0]));
@@ -439,8 +443,9 @@ function rirText(ex, data) {
   const r = RIR_MAIN(i.w);
   return r === "1-2" && (ex.name.startsWith("Pike") || ex.name === "Pistol Squat") ? "2" : r;
 }
-const PLAN_WEEK = { Mon: { focus: "GKA", activity: "tomorrow" }, Tue: { focus: "none", activity: "today" },
-                    Thu: { focus: "GKB_H2", activity: "none" }, Sat: { focus: "GKB_H1", activity: "none" } };
+const PLAN_WEEK = { Mon: { focus: "EMOM", activity: "tomorrow" }, Tue: { focus: "none", activity: "today" },
+                    Wed: { focus: "EMOM", activity: "none" }, Thu: { focus: "EMOM", activity: "none" },
+                    Sat: { focus: "HPULL", activity: "none" }, Sun: { focus: "HPUSH", activity: "none" } };
 const planDay = k => (blockInfo(k) ? PLAN_WEEK[weekdayOf(k)] || null : null);
 
 // sets given by the day type (for example 5 on a full body day), if any
@@ -450,8 +455,8 @@ const slotsOf = day => slotsFor(day.tf, day.focus);
 const exercisesOfFocus = tf => [...new Set(Object.values(FOCUS_PATTERNS[tf]).flat().map(([n]) => n))].map(n => EX[n]);
 
 const F_NONE = "none";
-const FOCUS_LABEL = { none: "Free day", Push: "Push", Pull: "Pull", Full: "Full Body", Upper: "Upper Body", Lower: "Lower Body", EMOM: "EMOM", GKA: "GK A", GKB_H1: "GK B + H1", GKB_H2: "GK B + H2" };
-const FOCUS_SHORT = { none: "", Push: "Push", Pull: "Pull", Full: "FB", Upper: "Up", Lower: "Low", EMOM: "EM", GKA: "A", GKB_H1: "B+1", GKB_H2: "B+2" };
+const FOCUS_LABEL = { none: "Free day", Push: "Push", Pull: "Pull", Full: "Full Body", Upper: "Upper Body", Lower: "Lower Body", EMOM: "EMOM", GKA: "GK A", GKB_H1: "GK B + H1", GKB_H2: "GK B + H2", HPULL: "Heavy Pull", HPUSH: "Heavy Push" };
+const FOCUS_SHORT = { none: "", Push: "Push", Pull: "Pull", Full: "FB", Upper: "Up", Lower: "Low", EMOM: "EM", GKA: "A", GKB_H1: "B+1", GKB_H2: "B+2", HPULL: "H-Pl", HPUSH: "H-Ps" };
 const A_NONE = "none", A_TODAY = "today", A_NEXT = "tomorrow";
 
 const ST_UP = "Level up";
@@ -1657,7 +1662,7 @@ $("file").onchange = async () => {
 // Everything lives in the same calendar, export and progress view as the set-based training.
 const EM_LADDER = {
   "Dips": "Dips", "Push-ups": "Planche Push-up Progression", "Pike Push-ups": "Pike / Handstand Push-up Progression",
-  "Pull-ups": "Pull-up", "Rows": "Row / FL Pull-up", "Goblet Squat": "Squat Progression", "RDL": "Hip Hinge / RDL Progression",
+  "Pull-ups": "Pull-up", "Split Squats": "Split Squat / Lunge Progression", "Rows": "Row / FL Pull-up", "Goblet Squat": "Squat Progression", "RDL": "Hip Hinge / RDL Progression",
   "Ab Wheel": "Core Pull (Ab Wheel)", "Lying Leg Raises": "Lying Leg Raises"
 };
 DEFAULT_LADDERS["Lying Leg Raises"] = [
@@ -1670,7 +1675,7 @@ DEFAULT_LADDERS["Lying Leg Raises"] = [
 const EM_PLANS = {
   Push: [{ blocks: [["Dips", 10], ["Push-ups", 10]] }, { blocks: [["Pike Push-ups", 20]] }],
   Pull: [{ blocks: [["Pull-ups", 20]] }, { blocks: [["Rows", 20]] }],
-  Legs: [{ blocks: [["Goblet Squat", 10], ["RDL", 10]] }],
+  Legs: [{ blocks: [["Split Squats", 20]] }, { blocks: [["RDL", 20]] }],
   Core: [{ blocks: [["Ab Wheel", 10], ["Lying Leg Raises", 10]] }]
 };
 const EM_TYPES = Object.keys(EM_PLANS);
@@ -1681,7 +1686,7 @@ const emRange = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 function emS() { return (state.em ||= { levels: {}, start: {}, plans: null }); }
 function emPlans(type) {
   const e = emS();
-  e.plans ||= emClone(EM_PLANS);
+  if (e.planv !== 2) { e.plans = emClone(EM_PLANS); e.planv = 2; }
   return e.plans[type] && e.plans[type].length ? e.plans[type] : EM_PLANS[type];
 }
 function emLadder(move) {
@@ -1770,20 +1775,36 @@ function emRefresh(bi) {
   Object.assign(b, { reps: sg.reps, done: sg.minutes, target: { reps: sg.reps, minutes: sg.minutes } });
 }
 
+// next A/B option of an EMOM type = the one after the last logged plan; default type per weekday
+function emNextOpt(type) {
+  const plans = emPlans(type);
+  for (const k of Object.keys(state.days).sort().reverse()) {
+    const sess = (state.days[k].emom || []).filter(x => x.type === type).pop();
+    if (sess && sess.blocks && sess.blocks.length) {
+      const i = plans.findIndex(pl => pl.blocks[0][0] === sess.blocks[0].move);
+      return i < 0 ? 0 : (i + 1) % plans.length;
+    }
+  }
+  return 0;
+}
+const emDefaultType = k => ({ Mon: "Pull", Tue: "Push", Wed: "Pull", Thu: "Push", Fri: "Legs", Sat: "Pull", Sun: "Push" })[weekdayOf(k)];
+
 // ---- the day panel for the focus "EMOM"
 function emDayPanel(panel, data) {
-  const types = EM_TYPES.filter(t => data.activity === A_NONE || !state.activity.groups.includes(t));
+  const jj = data.activity !== A_NONE, types = jj ? ["Pull", "Push", "Legs"] : EM_TYPES;
+  const okPlan = pl => !jj || ["Pull-ups", "Rows", "Pike Push-ups", "RDL"].includes(pl.blocks[0][0]);
+  const pickOpt = t => { const ps = emPlans(t); let i = emNextOpt(t); if (!okPlan(ps[i])) i = Math.max(0, ps.findIndex(okPlan)); return i; };
   if (data.activity !== A_NONE) {
-    panel.append(emH("p", { class: "note" }, `${state.activity.name} trains ${groupsText()}, so only these EMOM types are offered: ${types.join(", ") || "none"}.`));
+    panel.append(emH("p", { class: "note" }, `${state.activity.name} today or tomorrow: only pull, Pike Push-ups and RDL EMOMs are offered.`));
   }
   const day = state.days[viewDate];
   if (types.length) {
-    if (!emSetup || emSetupDate !== viewDate || !types.includes(emSetup.type)) { emSetup = emBuild(types[0], 0); emSetupDate = viewDate; }
+    if (!emSetup || emSetupDate !== viewDate || !types.includes(emSetup.type)) { const t0 = types.includes(emDefaultType(viewDate)) ? emDefaultType(viewDate) : types[0]; emSetup = emBuild(t0, pickOpt(t0)); emSetupDate = viewDate; }
     const card = emH("section", { class: "card" });
     card.append(emH("h2", {}, "Log an EMOM workout"));
     card.append(emH("div", { class: "row" },
-      emSel(types.map(t => [t, t]), emSetup.type, v => { emSetup = emBuild(v, 0); render(); }, "EMOM type"),
-      emSel(emPlans(emSetup.type).map((p, i) => [i, emPlanLabel(p)]), emSetup.opt, v => { emSetup = emBuild(emSetup.type, Number(v)); render(); }, "EMOM plan")));
+      emSel(types.map(t => [t, t]), emSetup.type, v => { emSetup = emBuild(v, pickOpt(v)); render(); }, "EMOM type"),
+      emSel(emPlans(emSetup.type).map((p, i) => [i, emPlanLabel(p)]).filter(([i]) => okPlan(emPlans(emSetup.type)[i])), emSetup.opt, v => { emSetup = emBuild(emSetup.type, Number(v)); render(); }, "EMOM plan")));
     emSetup.blocks.forEach((b, bi) => {
       const lvl = emLevel(b.move), lad = emLadder(b.move), last = emHistory(b.move).pop(), sg = emSug(b.move, b.minutes);
       const bc = emH("div", { style: "border-top:1px solid var(--line);padding-top:10px;margin-top:10px" });
