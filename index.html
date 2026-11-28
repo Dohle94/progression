@@ -1724,7 +1724,7 @@ function emSug(move, planned) {
 // actual: every logged block. ideal: the path if every session reached its target, plus `future` more sessions
 function emSeries(move, future = 3) {
   const hist = emHistory(move);
-  const actual = hist.map((b, i) => ({ i, k: b.k, day: dayNum(b.k), total: b.reps * b.done, reps: b.reps, done: b.done, level: b.level, planned: b.minutes }));
+  const actual = hist.map((b, i) => ({ i, k: b.k, day: dayNum(b.k), total: b.reps * b.done, reps: b.reps, done: b.done, level: b.level, planned: b.minutes, score: b.level + (b.reps + b.done / Math.max(1, b.minutes)) / 11 }));
   const ideal = [];
   if (hist.length) {
     const gaps = actual.slice(1).map((p, i) => p.day - actual[i].day).filter(g => g > 0);
@@ -1737,7 +1737,8 @@ function emSeries(move, future = 3) {
         else if (reps < 10) { reps++; done = Math.max(1, Math.ceil(planned * (reps - 1) / reps)); }
       }
       const day = i < hist.length ? actual[i].day : actual[actual.length - 1].day + (i - hist.length + 1) * gap;
-      ideal.push({ i, day, total: reps * done, reps, done, future: i >= hist.length });
+      const lv = hist[Math.min(i, hist.length - 1)].level;
+      ideal.push({ i, day, total: reps * done, reps, done, future: i >= hist.length, score: lv + (reps + done / Math.max(1, planned)) / 11 });
     }
   }
   return { actual, ideal };
@@ -1878,20 +1879,21 @@ function emDrawChart(host, series, move) {
   if (!actual.length) { host.append(emH("p", { class: "note" }, "No EMOM blocks logged for this exercise yet.")); return; }
   const NS = "http://www.w3.org/2000/svg", W = 360, H = 230, L = 44, R = 14, T = 16, B = 36;
   const el = (n, a = {}, t) => { const e = document.createElementNS(NS, n); for (const [k, v] of Object.entries(a)) e.setAttribute(k, v); if (t != null) e.textContent = t; return e; };
-  const maxV = Math.max(...actual.map(p => p.total), ...ideal.map(p => p.total)) * 1.1 || 1;
+  const allS = [...actual.map(p => p.score), ...ideal.map(p => p.score)], minS = Math.min(...allS) - 0.1, maxS = Math.max(...allS) + 0.1;
   const d0 = actual[0].day, d1 = ideal[ideal.length - 1].day, span = Math.max(1, d1 - d0);
-  const x = d => L + ((d - d0) / span) * (W - L - R), y = v => T + (1 - v / maxV) * (H - T - B);
-  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `EMOM total reps per block for ${move}` });
-  [0, 0.5, 1].forEach(f => { const v = maxV * f; svg.append(el("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), style: "stroke: var(--line)" }), el("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end", style: "fill: var(--muted); font-size: 10px" }, Math.round(v))); });
+  const x = d => L + ((d - d0) / span) * (W - L - R), y = v => T + (1 - (v - minS) / (maxS - minS)) * (H - T - B);
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": `EMOM progress for ${move}: level, reps per minute, minutes` });
+  for (let n = Math.ceil(minS); n <= Math.floor(maxS); n++) svg.append(el("line", { x1: L, x2: W - R, y1: y(n), y2: y(n), style: "stroke: var(--line)" }), el("text", { x: L - 6, y: y(n) + 4, "text-anchor": "end", style: "fill: var(--muted); font-size: 10px" }, `Level ${n}`));
   const lab = (day, anchor, text) => svg.append(el("text", { x: x(day), y: H - 12, "text-anchor": anchor, style: "fill: var(--muted); font-size: 10px" }, text));
   lab(d0, "start", shortDate(actual[0].k)); lab(d1, "end", shortDate(addDays(actual[0].k, d1 - d0)));
-  const pts = arr => arr.map(p => `${x(p.day).toFixed(1)},${y(p.total).toFixed(1)}`).join(" ");
+  const pts = arr => arr.map(p => `${x(p.day).toFixed(1)},${y(p.score).toFixed(1)}`).join(" ");
   const past = ideal.filter(p => !p.future), fut = ideal.filter((p, i) => p.future || i === actual.length - 1);
   if (past.length > 1) svg.append(el("polyline", { points: pts(past), fill: "none", style: "stroke: var(--ok); stroke-width: 2; stroke-dasharray: 6 4" }));
   if (fut.length > 1) svg.append(el("polyline", { points: pts(fut), fill: "none", style: "stroke: var(--ok); stroke-width: 2; stroke-dasharray: 2 4" }));
   if (actual.length > 1) svg.append(el("polyline", { points: pts(actual), fill: "none", style: "stroke: var(--accent); stroke-width: 2.5" }));
-  actual.forEach(p => svg.append(el("circle", { cx: x(p.day), cy: y(p.total), r: 3.5, style: "fill: var(--accent)" })));
-  host.append(svg);
+  actual.forEach(p => svg.append(el("circle", { cx: x(p.day), cy: y(p.score), r: 3.5, style: "fill: var(--accent)" })));
+  actual.slice(-8).forEach(p => svg.append(el("text", { x: x(p.day), y: y(p.score) - 8, "text-anchor": "middle", style: "fill: var(--muted); font-size: 9px" }, `${p.reps}×${p.done}`)));
+  host.append(svg, emH("p", { class: "note" }, "Height: level first, then reps per minute, then minutes. Labels show reps per minute × minutes."));
 }
 
 let emProgressMove = null;
